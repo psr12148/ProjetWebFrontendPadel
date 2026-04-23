@@ -1,0 +1,164 @@
+<div class="page-container">
+
+  <!-- En-tête -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Sites</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        {{ sites().length }} site(s) enregistré(s)
+      </p>
+    </div>
+    <button mat-flat-button color="primary"
+            (click)="router.navigate(['/sites/nouveau'])">
+      <mat-icon>add</mat-icon>
+      Nouveau site
+    </button>
+  </div>
+
+  <!-- Chargement -->
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <mat-spinner diameter="40" />
+    </div>
+  }
+
+  <!-- Erreur -->
+  @if (error()) {
+    <div class="padel-card flex items-center gap-3
+                    border border-red-200 bg-red-50 text-red-700">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
+      <button mat-button color="warn" class="ml-auto"
+              (click)="load()">
+        Réessayer
+      </button>
+    </div>
+  }
+
+  <!-- Tableau -->
+  @if (!loading() && !error() && sites().length > 0) {
+    <div class="padel-card p-0 overflow-hidden">
+      <table mat-table [dataSource]="sites()" class="w-full">
+
+        <!-- Nom -->
+        <ng-container matColumnDef="nom">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Nom
+          </th>
+          <td mat-cell *matCellDef="let s">
+            <span class="font-medium text-gray-900">{{ s.nom }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Adresse -->
+        <ng-container matColumnDef="adresse">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Adresse
+          </th>
+          <td mat-cell *matCellDef="let s">
+            <span class="text-sm text-gray-600">{{ s.adresse }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Terrains -->
+        <ng-container matColumnDef="nbTerrains">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Terrains
+          </th>
+          <td mat-cell *matCellDef="let s">
+            <mat-chip>{{ s.nbTerrains }}</mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Horaires -->
+        <ng-container matColumnDef="horaires">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Horaires
+          </th>
+          <td mat-cell *matCellDef="let s">
+                <span class="text-sm text-gray-600">
+                  {{ s.heureOuverture }} – {{ s.heureFermeture }}
+                </span>
+          </td>
+        </ng-container>
+
+        <!-- Créneaux -->
+        <ng-container matColumnDef="creneaux">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Créneaux / jour
+          </th>
+          <td mat-cell *matCellDef="let s">
+            @if (s.nombreCreneauxParJour) {
+              <span class="inline-flex items-center px-2 py-0.5 rounded
+                               text-xs font-medium bg-green-100 text-green-800">
+                    {{ s.nombreCreneauxParJour }} créneaux
+                  </span>
+            }
+          </td>
+        </ng-container>
+
+        <!-- Année -->
+        <ng-container matColumnDef="annee">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Année
+          </th>
+          <td mat-cell *matCellDef="let s">
+                <span class="text-sm text-gray-600">
+                  {{ s.anneeApplicable }}
+                </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let s">
+            <div class="flex items-center gap-1 justify-end">
+              <button mat-icon-button
+                      matTooltip="Modifier"
+                      (click)="onEdit(s)">
+                <mat-icon class="text-gray-500">edit</mat-icon>
+              </button>
+              <button mat-icon-button
+                      matTooltip="Supprimer"
+                      (click)="onDelete(s)">
+                <mat-icon class="text-red-400">delete_outline</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colonnes"
+            class="bg-gray-50 border-b border-gray-200"></tr>
+        <tr mat-row *matRowDef="let row; columns: colonnes;"
+            class="hover:bg-gray-50 border-b border-gray-100 last:border-0">
+        </tr>
+      </table>
+    </div>
+  }
+
+  <!-- État vide -->
+  @if (!loading() && !error() && sites().length === 0) {
+    <div class="padel-card flex flex-col items-center py-16 text-center">
+      <mat-icon class="text-gray-300 mb-4"
+                style="font-size:48px;width:48px;height:48px">
+        location_city
+      </mat-icon>
+      <p class="text-gray-500 text-lg mb-1">Aucun site enregistré</p>
+      <p class="text-gray-400 text-sm mb-6">
+        Créez votre premier site pour commencer
+      </p>
+      <button mat-flat-button color="primary"
+              (click)="router.navigate(['/sites/nouveau'])">
+        Créer un site
+      </button>
+    </div>
+  }
+
+</div>

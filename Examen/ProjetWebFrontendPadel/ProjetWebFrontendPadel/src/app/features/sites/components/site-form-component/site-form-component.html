@@ -1,0 +1,137 @@
+<div class="page-container max-w-2xl">
+
+  <!-- En-tête -->
+  <div class="flex items-center gap-3 mb-6">
+    <button mat-icon-button (click)="router.navigate(['/sites'])">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+      <h1 class="page-title">
+        {{ isEditMode() ? 'Modifier le site' : 'Nouveau site' }}
+      </h1>
+      <p class="text-sm text-gray-500 mt-0.5">
+        {{ isEditMode()
+        ? 'Mettez à jour les informations du site'
+        : 'Remplissez les informations pour créer un nouveau site' }}
+      </p>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="padel-card">
+
+    <!-- Informations générales -->
+    <h2 class="text-base font-medium text-gray-900 mb-4">
+      Informations générales
+    </h2>
+
+    <div class="flex flex-col gap-4">
+
+      <mat-form-field class="w-full">
+        <mat-label>Nom du site</mat-label>
+        <input matInput formControlName="nom"
+               placeholder="Ex : Club Padel Paris 15">
+        @if (form.get('nom')?.hasError('required')
+        && form.get('nom')?.touched) {
+          <mat-error>Le nom est obligatoire</mat-error>
+        }
+        @if (form.get('nom')?.hasError('maxlength')) {
+          <mat-error>Maximum 100 caractères</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Adresse</mat-label>
+        <input matInput formControlName="adresse"
+               placeholder="Ex : 10 rue du sport, Paris">
+        @if (form.get('adresse')?.hasError('required')
+        && form.get('adresse')?.touched) {
+          <mat-error>L'adresse est obligatoire</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="grid grid-cols-2 gap-4">
+
+        <mat-form-field>
+          <mat-label>Nombre de terrains</mat-label>
+          <input matInput type="number"
+                 formControlName="nbTerrains"
+                 min="1" max="50">
+          @if (form.get('nbTerrains')?.hasError('min')) {
+            <mat-error>Minimum 1 terrain</mat-error>
+          }
+          @if (form.get('nbTerrains')?.hasError('max')) {
+            <mat-error>Maximum 50 terrains</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Année applicable</mat-label>
+          <input matInput type="number"
+                 formControlName="anneeApplicable">
+          @if (form.get('anneeApplicable')?.hasError('min')) {
+            <mat-error>Année minimum : 2024</mat-error>
+          }
+        </mat-form-field>
+
+      </div>
+    </div>
+
+    <mat-divider class="my-6" />
+
+    <!-- Horaires -->
+    <h2 class="text-base font-medium text-gray-900 mb-1">
+      Horaires d'ouverture
+    </h2>
+    <p class="text-sm text-gray-500 mb-4">
+      Plage minimum : 1h45 (1 match de 1h30 + 15 min de pause).
+    </p>
+
+    <div class="grid grid-cols-2 gap-4" formGroupName="horaires">
+
+      <mat-form-field>
+        <mat-label>Heure d'ouverture</mat-label>
+        <input matInput type="time" formControlName="heureOuverture">
+        @if (form.get('horaires')?.hasError('horairesInvalides')) {
+          <mat-error>L'ouverture doit être avant la fermeture</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Heure de fermeture</mat-label>
+        <input matInput type="time" formControlName="heureFermeture">
+        @if (form.get('horaires')?.hasError('plageTropCourte')) {
+          <mat-error>Plage minimum : 1h45</mat-error>
+        }
+      </mat-form-field>
+
+    </div>
+
+    <!-- Résumé créneaux temps réel -->
+    @if (nombreCreneaux() > 0) {
+      <div class="mt-3 p-3 rounded-lg bg-green-50 border border-green-200">
+            <span class="text-green-700 text-sm font-medium">
+              {{ nombreCreneaux() }} créneau(x) disponible(s) par jour et par terrain
+            </span>
+      </div>
+    }
+
+    <mat-divider class="my-6" />
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3">
+      <button mat-button type="button"
+              (click)="router.navigate(['/sites'])">
+        Annuler
+      </button>
+      <button mat-flat-button color="primary"
+              type="submit"
+              [disabled]="form.invalid || submitting()">
+        @if (submitting()) {
+          <mat-spinner diameter="20" class="mr-2" />
+        }
+        {{ isEditMode() ? 'Enregistrer' : 'Créer le site' }}
+      </button>
+    </div>
+
+  </form>
+</div>

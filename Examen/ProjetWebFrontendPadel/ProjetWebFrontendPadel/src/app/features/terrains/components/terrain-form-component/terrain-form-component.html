@@ -1,0 +1,89 @@
+<div class="page-container max-w-2xl">
+
+  <!-- En-tête -->
+  <div class="flex items-center gap-3 mb-6">
+    <button mat-icon-button (click)="router.navigate(['/terrains'])">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+      <h1 class="page-title">
+        {{ isEditMode() ? 'Modifier le terrain' : 'Nouveau terrain' }}
+      </h1>
+      <p class="text-sm text-gray-500 mt-0.5">
+        {{ isEditMode()
+        ? 'Mettez à jour les informations du terrain'
+        : 'Ajoutez un terrain à un site existant' }}
+      </p>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="padel-card">
+
+    <div class="flex flex-col gap-4">
+
+      <!-- Site -->
+      <mat-form-field class="w-full">
+        <mat-label>Site</mat-label>
+        <mat-select formControlName="siteId">
+          @for (site of sites(); track site.id) {
+            <mat-option [value]="site.id">{{ site.nom }}</mat-option>
+          }
+        </mat-select>
+        @if (form.get('siteId')?.hasError('required')
+        && form.get('siteId')?.touched) {
+          <mat-error>Le site est obligatoire</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Numéro -->
+      <mat-form-field class="w-full">
+        <mat-label>Numéro de terrain</mat-label>
+        <input matInput type="number"
+               formControlName="numero"
+               min="1"
+               placeholder="Ex : 1">
+        @if (form.get('numero')?.hasError('required')
+        && form.get('numero')?.touched) {
+          <mat-error>Le numéro est obligatoire</mat-error>
+        }
+        @if (form.get('numero')?.hasError('min')) {
+          <mat-error>Le numéro doit être >= 1</mat-error>
+        }
+        <mat-hint>Doit être unique sur ce site</mat-hint>
+      </mat-form-field>
+
+      <!-- Nom (optionnel) -->
+      <mat-form-field class="w-full">
+        <mat-label>Nom du terrain (optionnel)</mat-label>
+        <input matInput formControlName="nom"
+               placeholder="Ex : Terrain Central">
+        @if (form.get('nom')?.hasError('maxlength')) {
+          <mat-error>Maximum 50 caractères</mat-error>
+        }
+        <mat-hint>
+          Si vide, le terrain sera affiché "Terrain N°{{ form.get('numero')?.value || '?' }}"
+        </mat-hint>
+      </mat-form-field>
+
+    </div>
+
+    <mat-divider class="my-6" />
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3">
+      <button mat-button type="button"
+              (click)="router.navigate(['/terrains'])">
+        Annuler
+      </button>
+      <button mat-flat-button color="primary"
+              type="submit"
+              [disabled]="form.invalid || submitting()">
+        @if (submitting()) {
+          <mat-spinner diameter="20" class="mr-2" />
+        }
+        {{ isEditMode() ? 'Enregistrer' : 'Créer le terrain' }}
+      </button>
+    </div>
+
+  </form>
+</div>

@@ -1,0 +1,162 @@
+<div class="page-container max-w-2xl">
+
+  <!-- En-tête -->
+  <div class="flex items-center gap-3 mb-6">
+    <button mat-icon-button (click)="router.navigate(['/membres'])">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+      <h1 class="page-title">
+        {{ isEditMode() ? 'Modifier le membre' : 'Nouveau membre' }}
+      </h1>
+      <p class="text-sm text-gray-500 mt-0.5">
+        {{ isEditMode()
+        ? 'Mettez à jour les informations du membre'
+        : 'Créez un nouveau membre (G, S ou L)' }}
+      </p>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="padel-card">
+
+    <!-- Identité -->
+    <h2 class="text-base font-medium text-gray-900 mb-4">Identité</h2>
+
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <mat-form-field>
+        <mat-label>Prénom</mat-label>
+        <input matInput formControlName="prenom">
+        @if (form.get('prenom')?.hasError('required')
+        && form.get('prenom')?.touched) {
+          <mat-error>Obligatoire</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Nom</mat-label>
+        <input matInput formControlName="nom">
+        @if (form.get('nom')?.hasError('required')
+        && form.get('nom')?.touched) {
+          <mat-error>Obligatoire</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <mat-form-field class="w-full mb-4">
+      <mat-label>Email</mat-label>
+      <input matInput type="email" formControlName="email">
+      @if (form.get('email')?.hasError('required')
+      && form.get('email')?.touched) {
+        <mat-error>L'email est obligatoire</mat-error>
+      }
+      @if (form.get('email')?.hasError('email')) {
+        <mat-error>Format d'email invalide</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-divider class="my-6" />
+
+    <!-- Type et matricule -->
+    <h2 class="text-base font-medium text-gray-900 mb-4">
+      Type et accès
+    </h2>
+
+    <div class="grid grid-cols-2 gap-4 mb-4">
+
+      <mat-form-field>
+        <mat-label>Type de membre</mat-label>
+        <mat-select formControlName="typeMembre"
+                    (selectionChange)="onTypeChange()">
+          <mat-option value="GLOBAL">
+            Global (G) — 3 semaines
+          </mat-option>
+          <mat-option value="SITE">
+            Site (S) — 2 semaines
+          </mat-option>
+          <mat-option value="LIBRE">
+            Libre (L) — 5 jours
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Matricule</mat-label>
+        <input matInput formControlName="matricule"
+               [placeholder]="matriculePlaceholder()">
+        @if (form.hasError('matriculeTypeIncoherent')) {
+          <mat-error>
+            Doit commencer par "{{ form.getError('matriculeTypeIncoherent').attendu }}"
+          </mat-error>
+        }
+        @if (form.get('matricule')?.hasError('pattern')) {
+          <mat-error>Format : G0001, S00001 ou L00001</mat-error>
+        }
+      </mat-form-field>
+
+    </div>
+
+    <!-- Site (affiché seulement si type = SITE) -->
+    @if (form.get('typeMembre')?.value === 'SITE') {
+      <mat-form-field class="w-full mb-4">
+        <mat-label>Site d'appartenance</mat-label>
+        <mat-select formControlName="siteId">
+          @for (site of sites(); track site.id) {
+            <mat-option [value]="site.id">{{ site.nom }}</mat-option>
+          }
+        </mat-select>
+        @if (form.get('siteId')?.hasError('required')
+        && form.get('siteId')?.touched) {
+          <mat-error>Le site est obligatoire pour un membre SITE</mat-error>
+        }
+      </mat-form-field>
+    }
+
+    <!-- Résumé délai de réservation -->
+    <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 mb-4">
+      <p class="text-blue-700 text-sm">
+        <strong>Délai de réservation : </strong>
+        {{ delaiLabel() }}
+      </p>
+    </div>
+
+    <mat-divider class="my-6" />
+
+    <!-- Mot de passe -->
+    <h2 class="text-base font-medium text-gray-900 mb-4">
+      {{ isEditMode() ? 'Changer le mot de passe' : 'Mot de passe' }}
+    </h2>
+
+    <mat-form-field class="w-full">
+      <mat-label>
+        {{ isEditMode() ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe' }}
+      </mat-label>
+      <input matInput type="password" formControlName="motDePasse">
+      @if (form.get('motDePasse')?.hasError('minlength')) {
+        <mat-error>Minimum 8 caractères</mat-error>
+      }
+      @if (!isEditMode() && form.get('motDePasse')?.hasError('required')
+      && form.get('motDePasse')?.touched) {
+        <mat-error>Le mot de passe est obligatoire</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-divider class="my-6" />
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3">
+      <button mat-button type="button"
+              (click)="router.navigate(['/membres'])">
+        Annuler
+      </button>
+      <button mat-flat-button color="primary"
+              type="submit"
+              [disabled]="form.invalid || submitting()">
+        @if (submitting()) {
+          <mat-spinner diameter="20" class="mr-2" />
+        }
+        {{ isEditMode() ? 'Enregistrer' : 'Créer le membre' }}
+      </button>
+    </div>
+
+  </form>
+</div>

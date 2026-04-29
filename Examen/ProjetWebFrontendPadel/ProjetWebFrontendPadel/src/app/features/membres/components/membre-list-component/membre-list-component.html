@@ -1,0 +1,181 @@
+<div class="page-container">
+
+  <!-- En-tête -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Membres</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        {{ membres().length }} membre(s)
+      </p>
+    </div>
+    <button mat-flat-button color="primary"
+            (click)="router.navigate(['/membres/nouveau'])">
+      <mat-icon>person_add</mat-icon>
+      Nouveau membre
+    </button>
+  </div>
+
+  <!-- Filtres -->
+  <div class="padel-card mb-6 flex flex-wrap gap-4 items-center">
+
+    <mat-form-field class="w-full sm:w-64">
+      <mat-label>Rechercher</mat-label>
+      <input matInput
+             [(ngModel)]="searchQuery"
+             (ngModelChange)="onSearch($event)"
+             placeholder="Nom, prénom, matricule...">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field class="w-full sm:w-48">
+      <mat-label>Type de membre</mat-label>
+      <mat-select [(ngModel)]="typeFiltre"
+                  (ngModelChange)="onTypeChange($event)">
+        <mat-option [value]="null">Tous</mat-option>
+        <mat-option value="GLOBAL">Membre Global (G)</mat-option>
+        <mat-option value="SITE">Membre Site (S)</mat-option>
+        <mat-option value="LIBRE">Membre Libre (L)</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    @if (hasFilters()) {
+      <button mat-button (click)="resetFiltres()">
+        <mat-icon>clear</mat-icon>
+        Réinitialiser
+      </button>
+    }
+  </div>
+
+  <!-- Chargement -->
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <mat-spinner diameter="40" />
+    </div>
+  }
+
+  <!-- Tableau -->
+  @if (!loading() && membres().length > 0) {
+    <div class="padel-card p-0 overflow-hidden">
+      <table mat-table [dataSource]="membres()" class="w-full">
+
+        <!-- Matricule -->
+        <ng-container matColumnDef="matricule">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Matricule
+          </th>
+          <td mat-cell *matCellDef="let m">
+            <code class="px-2 py-0.5 rounded bg-gray-100
+                             text-gray-700 text-sm font-mono">
+              {{ m.matricule }}
+            </code>
+          </td>
+        </ng-container>
+
+        <!-- Nom complet -->
+        <ng-container matColumnDef="nom">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Membre
+          </th>
+          <td mat-cell *matCellDef="let m">
+            <div class="font-medium text-gray-900">
+              {{ m.prenom }} {{ m.nom }}
+            </div>
+            <div class="text-xs text-gray-500">{{ m.email }}</div>
+          </td>
+        </ng-container>
+
+        <!-- Type -->
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Type
+          </th>
+          <td mat-cell *matCellDef="let m">
+                <span [class]="typeBadgeClass(m.typeMembre)">
+                  {{ m.typeLabel }}
+                </span>
+          </td>
+        </ng-container>
+
+        <!-- Site -->
+        <ng-container matColumnDef="site">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Site
+          </th>
+          <td mat-cell *matCellDef="let m">
+                <span class="text-sm text-gray-600">
+                  {{ m.siteNom ?? '— Tous sites —' }}
+                </span>
+          </td>
+        </ng-container>
+
+        <!-- Statut -->
+        <ng-container matColumnDef="statut">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Statut
+          </th>
+          <td mat-cell *matCellDef="let m">
+            <div class="flex flex-col gap-1">
+              @if (m.penaliteActive) {
+                <span class="badge-annule">
+                      Pénalité jusqu'au {{ m.penaliteJusquA }}
+                    </span>
+              }
+              @if (m.soldeImpayes) {
+                <span class="badge-en-attente">
+                      Solde : {{ m.soldeImpaye | number:'1.2-2' }}€
+                    </span>
+              }
+              @if (!m.penaliteActive && !m.soldeImpayes) {
+                <span class="badge-confirme">Actif</span>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let m">
+            <div class="flex items-center gap-1 justify-end">
+              <button mat-icon-button matTooltip="Modifier"
+                      (click)="onEdit(m)">
+                <mat-icon class="text-gray-500">edit</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Supprimer"
+                      (click)="onDelete(m)">
+                <mat-icon class="text-red-400">delete_outline</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colonnes"
+            class="bg-gray-50 border-b border-gray-200"></tr>
+        <tr mat-row *matRowDef="let row; columns: colonnes;"
+            class="hover:bg-gray-50 border-b border-gray-100 last:border-0">
+        </tr>
+      </table>
+    </div>
+  }
+
+  <!-- État vide -->
+  @if (!loading() && membres().length === 0) {
+    <div class="padel-card flex flex-col items-center py-16 text-center">
+      <mat-icon class="text-gray-300 mb-4"
+                style="font-size:48px;width:48px;height:48px">
+        group
+      </mat-icon>
+      <p class="text-gray-500 text-lg mb-1">Aucun membre trouvé</p>
+      <button mat-flat-button color="primary" class="mt-4"
+              (click)="router.navigate(['/membres/nouveau'])">
+        Créer un membre
+      </button>
+    </div>
+  }
+
+</div>

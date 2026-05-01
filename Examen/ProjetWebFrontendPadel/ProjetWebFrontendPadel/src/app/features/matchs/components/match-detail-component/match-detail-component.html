@@ -1,0 +1,200 @@
+<div class="page-container max-w-3xl">
+
+  <!-- En-tête -->
+  <div class="flex items-center gap-3 mb-6">
+    <button mat-icon-button (click)="router.navigate(['/matchs'])">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="flex-1">
+      <h1 class="page-title">Détail du match</h1>
+    </div>
+    @if (match()) {
+      <span [class]="statutBadgeClass(match()!.statut)">
+            {{ statutLabel(match()!.statut) }}
+          </span>
+    }
+  </div>
+
+  <!-- Chargement -->
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <mat-spinner diameter="40" />
+    </div>
+  }
+
+  @if (match()) {
+    <!-- Infos générales -->
+    <div class="padel-card mb-4">
+
+      <div class="grid grid-cols-2 gap-6">
+
+        <!-- Colonne gauche -->
+        <div class="flex flex-col gap-3">
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
+              Site
+            </p>
+            <p class="font-medium text-gray-900">{{ match()!.siteNom }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
+              Terrain
+            </p>
+            <p class="font-medium text-gray-900">{{ match()!.terrainNom }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
+              Organisateur
+            </p>
+            <p class="font-medium text-gray-900">
+              {{ match()!.organisateurNom }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Colonne droite -->
+        <div class="flex flex-col gap-3">
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
+              Date
+            </p>
+            <p class="font-medium text-gray-900">
+              {{ match()!.dateHeure | date:'EEEE dd MMMM yyyy':'':'fr' }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
+              Heure
+            </p>
+            <p class="font-medium text-gray-900">
+              {{ match()!.dateHeure | date:'HH:mm' }}
+              – {{ heureFin() }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">
+              Type
+            </p>
+            <span [class]="typeBadgeClass(match()!.typeMatch)">
+                  {{ match()!.typeMatch === 'PRIVE' ? 'Privé' : 'Public' }}
+                </span>
+          </div>
+        </div>
+
+      </div>
+
+      <mat-divider class="my-4" />
+
+      <!-- Résumé financier -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+          <mat-icon class="text-green-500">euro</mat-icon>
+          Montant total :
+          <strong class="text-gray-900">{{ match()!.montantTotal }}€</strong>
+          ({{ match()!.montantTotal / 4 }}€ / joueur)
+        </div>
+        <div class="text-sm text-gray-600">
+          Places :
+          <strong [class]="match()!.complet ? 'text-red-600' : 'text-green-600'">
+            {{ 4 - match()!.placesDisponibles }}/4
+          </strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des joueurs -->
+    <div class="padel-card mb-4">
+      <h2 class="text-base font-medium text-gray-900 mb-4">Joueurs</h2>
+
+      <div class="flex flex-col gap-3">
+
+        @for (p of match()!.participations; track p.id) {
+          <div class="flex items-center gap-3 p-3 rounded-lg
+                          bg-gray-50 border border-gray-100">
+
+            <!-- Avatar initiales -->
+            <div class="w-9 h-9 rounded-full flex items-center justify-center
+                            text-white text-sm font-medium flex-shrink-0"
+                 [style.background-color]="avatarColor(p.statut)">
+              {{ p.membreNom.charAt(0) }}
+            </div>
+
+            <!-- Infos -->
+            <div class="flex-1">
+              <p class="font-medium text-gray-900 text-sm">
+                {{ p.membreNom }}
+              </p>
+              <p class="text-xs text-gray-500">{{ p.membreMatricule }}</p>
+            </div>
+
+            <!-- Statut paiement -->
+            <div class="flex items-center gap-2">
+              @if (p.payee) {
+                <span class="badge-confirme">
+                      <mat-icon style="font-size:12px;width:12px;height:12px"
+                                class="mr-1">check</mat-icon>
+                      Payé ({{ p.montantPaye }}€)
+                    </span>
+              } @else {
+                <span class="badge-en-attente">
+                      En attente ({{ p.montantDu }}€)
+                    </span>
+              }
+            </div>
+
+            <!-- Bouton payer (si c'est le membre connecté et non payé) -->
+            @if (p.membreId === membreConnecteId && !p.payee) {
+              <button mat-flat-button color="primary"
+                      (click)="onPayer(p)">
+                <mat-icon>payment</mat-icon>
+                Payer {{ p.montantDu }}€
+              </button>
+            }
+
+          </div>
+        }
+
+        <!-- Places vides -->
+        @for (i of placesVides(); track i) {
+          <div class="flex items-center gap-3 p-3 rounded-lg
+                          border-2 border-dashed border-gray-200">
+            <div class="w-9 h-9 rounded-full bg-gray-100 flex items-center
+                            justify-center flex-shrink-0">
+              <mat-icon class="text-gray-400">person_add</mat-icon>
+            </div>
+            <p class="text-sm text-gray-400 italic">Place disponible</p>
+
+            <!-- Rejoindre si match public et pas encore inscrit -->
+            @if (match()!.typeMatch === 'PUBLIC' && !estDejaInscrit()) {
+              <button mat-stroked-button color="primary" class="ml-auto"
+                      (click)="onRejoindre()">
+                Rejoindre
+              </button>
+            }
+          </div>
+        }
+
+      </div>
+    </div>
+
+    <!-- Actions organisateur (match privé) -->
+    @if (estOrganisateur() && match()!.typeMatch === 'PRIVE'
+    && !match()!.complet) {
+      <div class="padel-card">
+        <h2 class="text-base font-medium text-gray-900 mb-3">
+          Inviter un joueur
+        </h2>
+        <p class="text-sm text-gray-500 mb-4">
+          En tant qu'organisateur, vous pouvez ajouter directement
+          les joueurs à votre match privé.
+        </p>
+        <button mat-flat-button color="primary"
+                (click)="router.navigate(['/membres'])">
+          <mat-icon>person_search</mat-icon>
+          Chercher un membre
+        </button>
+      </div>
+    }
+  }
+
+</div>

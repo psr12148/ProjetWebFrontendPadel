@@ -1,0 +1,154 @@
+<div class="page-container max-w-2xl">
+
+  <!-- En-tête -->
+  <div class="flex items-center gap-3 mb-6">
+    <button mat-icon-button (click)="router.navigate(['/matchs'])">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div>
+      <h1 class="page-title">Créer un match</h1>
+      <p class="text-sm text-gray-500 mt-0.5">
+        Réservez un terrain et choisissez le type de match
+      </p>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="padel-card">
+
+    <!-- Site et terrain -->
+    <h2 class="text-base font-medium text-gray-900 mb-4">
+      Lieu
+    </h2>
+
+    <div class="flex flex-col gap-4 mb-6">
+
+      <mat-form-field class="w-full">
+        <mat-label>Site</mat-label>
+        <mat-select formControlName="siteId"
+                    (selectionChange)="onSiteChange($event.value)">
+          @for (site of sites(); track site.id) {
+            <mat-option [value]="site.id">{{ site.nom }}</mat-option>
+          }
+        </mat-select>
+        @if (form.get('siteId')?.hasError('required')
+        && form.get('siteId')?.touched) {
+          <mat-error>Sélectionnez un site</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Terrain</mat-label>
+        <mat-select formControlName="terrainId"
+                    [disabled]="terrains().length === 0">
+          @for (t of terrains(); track t.id) {
+            <mat-option [value]="t.id">{{ t.nomAffichage }}</mat-option>
+          }
+        </mat-select>
+        @if (form.get('terrainId')?.hasError('required')
+        && form.get('terrainId')?.touched) {
+          <mat-error>Sélectionnez un terrain</mat-error>
+        }
+        @if (terrains().length === 0 && form.get('siteId')?.value) {
+          <mat-hint class="text-amber-600">
+            Aucun terrain disponible sur ce site
+          </mat-hint>
+        }
+      </mat-form-field>
+
+    </div>
+
+    <mat-divider class="my-6" />
+
+    <!-- Date et heure -->
+    <h2 class="text-base font-medium text-gray-900 mb-4">
+      Date et heure
+    </h2>
+
+    <mat-form-field class="w-full mb-6">
+      <mat-label>Date et heure du match</mat-label>
+      <input matInput type="datetime-local" formControlName="dateHeure">
+      @if (form.get('dateHeure')?.hasError('required')
+      && form.get('dateHeure')?.touched) {
+        <mat-error>La date est obligatoire</mat-error>
+      }
+      <mat-hint>Durée : 1h30. Vérifiez les horaires du site.</mat-hint>
+    </mat-form-field>
+
+    <mat-divider class="my-6" />
+
+    <!-- Type de match -->
+    <h2 class="text-base font-medium text-gray-900 mb-4">
+      Type de match
+    </h2>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+
+      <!-- Privé -->
+      <div (click)="form.get('typeMatch')!.setValue('PRIVE')"
+           [class]="typeCardClass('PRIVE')"
+           class="padel-card cursor-pointer transition-all border-2">
+        <div class="flex items-center gap-3 mb-2">
+          <mat-icon [class]="form.get('typeMatch')?.value === 'PRIVE'
+                ? 'text-purple-600' : 'text-gray-400'">
+            lock
+          </mat-icon>
+          <span class="font-medium">Privé</span>
+        </div>
+        <p class="text-xs text-gray-500">
+          Vous invitez les 3 autres joueurs. Si incomplet la veille → devient public.
+        </p>
+      </div>
+
+      <!-- Public -->
+      <div (click)="form.get('typeMatch')!.setValue('PUBLIC')"
+           [class]="typeCardClass('PUBLIC')"
+           class="padel-card cursor-pointer transition-all border-2">
+        <div class="flex items-center gap-3 mb-2">
+          <mat-icon [class]="form.get('typeMatch')?.value === 'PUBLIC'
+                ? 'text-blue-600' : 'text-gray-400'">
+            public
+          </mat-icon>
+          <span class="font-medium">Public</span>
+        </div>
+        <p class="text-xs text-gray-500">
+          Les 3 places sont ouvertes à tous. Premier payé = premier servi.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Info coût -->
+    <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 mb-6">
+      <p class="text-blue-700 text-sm">
+        <mat-icon class="text-blue-500 align-middle mr-1"
+                  style="font-size:16px;width:16px;height:16px">
+          info
+        </mat-icon>
+        Coût total : <strong>60€</strong> — soit
+        <strong>15€ par joueur</strong>, payés à l'avance.
+        @if (form.get('typeMatch')?.value === 'PUBLIC') {
+          Si des places restent vides, vous payez le solde.
+        }
+      </p>
+    </div>
+
+    <mat-divider class="my-6" />
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3">
+      <button mat-button type="button"
+              (click)="router.navigate(['/matchs'])">
+        Annuler
+      </button>
+      <button mat-flat-button color="primary"
+              type="submit"
+              [disabled]="form.invalid || submitting()">
+        @if (submitting()) {
+          <mat-spinner diameter="20" class="mr-2" />
+        }
+        Créer le match
+      </button>
+    </div>
+
+  </form>
+</div>

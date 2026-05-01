@@ -1,0 +1,198 @@
+<div class="page-container">
+
+  <!-- En-tête -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Matchs</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        {{ matches().length }} match(s) trouvé(s)
+      </p>
+    </div>
+    <button mat-flat-button color="primary"
+            (click)="router.navigate(['/matchs/nouveau'])">
+      <mat-icon>add</mat-icon>
+      Nouveau match
+    </button>
+  </div>
+
+  <!-- Filtres -->
+  <div class="padel-card mb-6 flex flex-wrap gap-4 items-end">
+
+    <!-- Onglets : Mes matchs / Publics disponibles -->
+    <div class="flex gap-2">
+      <button mat-flat-button
+              [color]="vue() === 'mes-matchs' ? 'primary' : undefined"
+              (click)="setVue('mes-matchs')">
+        Mes matchs
+      </button>
+      <button mat-flat-button
+              [color]="vue() === 'publics' ? 'primary' : undefined"
+              (click)="setVue('publics')">
+        <mat-icon>public</mat-icon>
+        Matchs publics
+      </button>
+    </div>
+
+    <!-- Filtre par site + date (vue "mes matchs") -->
+    @if (vue() === 'mes-matchs') {
+      <mat-form-field class="w-48">
+        <mat-label>Site</mat-label>
+        <mat-select [(ngModel)]="siteIdFiltre"
+                    (ngModelChange)="onFiltreChange()">
+          <mat-option [value]="null">Tous les sites</mat-option>
+          @for (site of sites(); track site.id) {
+            <mat-option [value]="site.id">{{ site.nom }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="w-44">
+        <mat-label>Date</mat-label>
+        <input matInput type="date"
+               [(ngModel)]="dateFiltre"
+               (ngModelChange)="onFiltreChange()">
+      </mat-form-field>
+    }
+  </div>
+
+  <!-- Chargement -->
+  @if (loading()) {
+    <div class="flex justify-center py-16">
+      <mat-spinner diameter="40" />
+    </div>
+  }
+
+  <!-- Tableau -->
+  @if (!loading() && matches().length > 0) {
+    <div class="padel-card p-0 overflow-hidden">
+      <table mat-table [dataSource]="matches()" class="w-full">
+
+        <!-- Date / heure -->
+        <ng-container matColumnDef="dateHeure">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Date & heure
+          </th>
+          <td mat-cell *matCellDef="let m">
+            <div class="font-medium text-gray-900">
+              {{ m.dateHeure | date:'dd/MM/yyyy' }}
+            </div>
+            <div class="text-xs text-gray-500">
+              {{ m.dateHeure | date:'HH:mm' }}
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Site / Terrain -->
+        <ng-container matColumnDef="lieu">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Lieu
+          </th>
+          <td mat-cell *matCellDef="let m">
+            <div class="font-medium text-gray-900">{{ m.siteNom }}</div>
+            <div class="text-xs text-gray-500">{{ m.terrainNom }}</div>
+          </td>
+        </ng-container>
+
+        <!-- Type -->
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Type
+          </th>
+          <td mat-cell *matCellDef="let m">
+                <span [class]="typeBadgeClass(m.typeMatch)">
+                  {{ m.typeMatch === 'PRIVE' ? 'Privé' : 'Public' }}
+                </span>
+          </td>
+        </ng-container>
+
+        <!-- Joueurs -->
+        <ng-container matColumnDef="joueurs">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Joueurs
+          </th>
+          <td mat-cell *matCellDef="let m">
+            <div class="flex items-center gap-1">
+              @for (i of [1,2,3,4]; track i) {
+                <span [class]="joueurIconClass(m, i)">
+                      <mat-icon style="font-size:16px;width:16px;height:16px">
+                        person
+                      </mat-icon>
+                    </span>
+              }
+              <span class="text-xs text-gray-500 ml-1">
+                    {{ m.nombreJoueursConfirmes }}/4
+                  </span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Statut -->
+        <ng-container matColumnDef="statut">
+          <th mat-header-cell *matHeaderCellDef
+              class="text-xs font-medium text-gray-500 uppercase">
+            Statut
+          </th>
+          <td mat-cell *matCellDef="let m">
+                <span [class]="statutBadgeClass(m.statut)">
+                  {{ statutLabel(m.statut) }}
+                </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let m">
+            <div class="flex items-center gap-1 justify-end">
+              <button mat-icon-button
+                      matTooltip="Voir le détail"
+                      (click)="router.navigate(['/matchs', m.id])">
+                <mat-icon class="text-gray-500">visibility</mat-icon>
+              </button>
+              @if (m.typeMatch === 'PUBLIC' && !m.complet) {
+                <button mat-icon-button
+                        matTooltip="Rejoindre"
+                        color="primary"
+                        (click)="onRejoindre(m)">
+                  <mat-icon>login</mat-icon>
+                </button>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colonnes"
+            class="bg-gray-50 border-b border-gray-200"></tr>
+        <tr mat-row *matRowDef="let row; columns: colonnes;"
+            class="hover:bg-gray-50 border-b border-gray-100 last:border-0
+                       cursor-pointer"
+            (click)="router.navigate(['/matchs', row.id])">
+        </tr>
+      </table>
+    </div>
+  }
+
+  <!-- État vide -->
+  @if (!loading() && matches().length === 0) {
+    <div class="padel-card flex flex-col items-center py-16 text-center">
+      <mat-icon class="text-gray-300 mb-4"
+                style="font-size:48px;width:48px;height:48px">
+        sports_tennis
+      </mat-icon>
+      <p class="text-gray-500 text-lg mb-1">
+        {{ vue() === 'publics'
+        ? 'Aucun match public disponible'
+        : 'Aucun match trouvé' }}
+      </p>
+      <button mat-flat-button color="primary" class="mt-4"
+              (click)="router.navigate(['/matchs/nouveau'])">
+        Créer un match
+      </button>
+    </div>
+  }
+
+</div>

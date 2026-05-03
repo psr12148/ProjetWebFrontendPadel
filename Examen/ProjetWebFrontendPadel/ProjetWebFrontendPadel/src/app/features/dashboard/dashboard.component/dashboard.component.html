@@ -1,0 +1,296 @@
+<div class="page-container">
+
+  <!-- En-tête -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        Semaine du {{ debutSemaine() | date:'dd/MM' }}
+        au {{ finSemaine() | date:'dd/MM/yyyy' }}
+      </p>
+    </div>
+    <button mat-icon-button matTooltip="Rafraîchir"
+            (click)="load()">
+      <mat-icon [class]="loading() ? 'animate-spin' : ''">refresh</mat-icon>
+    </button>
+  </div>
+
+  <!-- Chargement -->
+  @if (loading() && !stats()) {
+    <div class="flex justify-center py-16">
+      <mat-spinner diameter="40" />
+    </div>
+  }
+
+  @if (stats()) {
+
+    <!-- ===================== ALERTES J-1 ===================== -->
+    @if (stats()!.alertesMatchsPrivesIncomplets > 0
+    || stats()!.alertesPlacesNonPayees > 0) {
+      <div class="padel-card mb-6 border border-amber-300 bg-amber-50">
+        <div class="flex items-center gap-2 mb-3">
+          <mat-icon class="text-amber-500">warning</mat-icon>
+          <h2 class="text-base font-medium text-amber-800">
+            Alertes J-1 — Traitement automatique ce soir à 20h00
+          </h2>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          @if (stats()!.alertesMatchsPrivesIncomplets > 0) {
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg
+                            bg-amber-100 border border-amber-300">
+              <mat-icon class="text-amber-600 text-sm">lock_open</mat-icon>
+              <span class="text-sm text-amber-800">
+                    <strong>{{ stats()!.alertesMatchsPrivesIncomplets }}</strong>
+                    match(s) privé(s) incomplet(s) → basculeront en public
+                  </span>
+            </div>
+          }
+          @if (stats()!.alertesPlacesNonPayees > 0) {
+            <div class="flex items-center gap-2 px-3 py-2 rounded-lg
+                            bg-red-100 border border-red-300">
+              <mat-icon class="text-red-600 text-sm">payment</mat-icon>
+              <span class="text-sm text-red-800">
+                    <strong>{{ stats()!.alertesPlacesNonPayees }}</strong>
+                    place(s) non payée(s) → seront libérées
+                  </span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ===================== KPI PRINCIPAUX ===================== -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+      <div class="padel-card text-center cursor-pointer hover:shadow-md transition-shadow"
+           (click)="router.navigate(['/sites'])">
+        <p class="text-3xl font-bold text-green-600">
+          {{ stats()!.totalSites }}
+        </p>
+        <p class="text-sm text-gray-500 mt-1">Sites</p>
+        <p class="text-xs text-gray-400">
+          {{ stats()!.totalTerrains }} terrain(s)
+        </p>
+      </div>
+
+      <div class="padel-card text-center cursor-pointer hover:shadow-md transition-shadow"
+           (click)="router.navigate(['/membres'])">
+        <p class="text-3xl font-bold text-blue-600">
+          {{ stats()!.totalMembres }}
+        </p>
+        <p class="text-sm text-gray-500 mt-1">Membres</p>
+        @if (stats()!.membresAvecPenalite > 0) {
+          <p class="text-xs text-red-500">
+            {{ stats()!.membresAvecPenalite }} avec pénalité
+          </p>
+        }
+      </div>
+
+      <div class="padel-card text-center cursor-pointer hover:shadow-md transition-shadow"
+           (click)="router.navigate(['/matchs'])">
+        <p class="text-3xl font-bold text-purple-600">
+          {{ stats()!.totalMatchsAujourdhui }}
+        </p>
+        <p class="text-sm text-gray-500 mt-1">Matchs aujourd'hui</p>
+        <p class="text-xs text-gray-400">
+          {{ stats()!.totalMatchsSemaine }} cette semaine
+        </p>
+      </div>
+
+      <div class="padel-card text-center">
+        <p class="text-3xl font-bold text-amber-600">
+          {{ stats()!.chiffreAffairesJour | number:'1.2-2' }}€
+        </p>
+        <p class="text-sm text-gray-500 mt-1">CA aujourd'hui</p>
+        <p class="text-xs text-gray-400">
+          {{ stats()!.chiffreAffairesSemaine | number:'1.2-2' }}€ cette semaine
+        </p>
+      </div>
+
+    </div>
+
+    <!-- ===================== LIGNE 2 : MATCHS + PAIEMENTS ===================== -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+      <!-- Statut des matchs -->
+      <div class="padel-card">
+        <h2 class="text-base font-medium text-gray-900 mb-4 flex items-center gap-2">
+          <mat-icon class="text-purple-500">sports_tennis</mat-icon>
+          Matchs — semaine en cours
+        </h2>
+
+        <div class="flex flex-col gap-3">
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-green-500"></span>
+              <span class="text-sm text-gray-600">Confirmés</span>
+            </div>
+            <span class="font-medium text-gray-900">
+                  {{ stats()!.matchsConfirmes }}
+                </span>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span class="text-sm text-gray-600">En attente</span>
+            </div>
+            <span class="font-medium text-gray-900">
+                  {{ stats()!.matchsEnAttente }}
+                </span>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              <span class="text-sm text-gray-600">Publics disponibles</span>
+            </div>
+            <div class="flex items-center gap-2">
+                  <span class="font-medium text-gray-900">
+                    {{ stats()!.matchsPublicsDisponibles }}
+                  </span>
+              <button mat-icon-button
+                      matTooltip="Voir les matchs publics"
+                      (click)="router.navigate(['/matchs'])"
+                      style="width:24px;height:24px;line-height:24px">
+                <mat-icon style="font-size:16px">open_in_new</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-red-400"></span>
+              <span class="text-sm text-gray-600">Privés incomplets</span>
+            </div>
+            <span class="font-medium"
+                  [class]="stats()!.matchsPrivesIncomplets > 0
+                        ? 'text-red-600' : 'text-gray-900'">
+                  {{ stats()!.matchsPrivesIncomplets }}
+                </span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Paiements & soldes -->
+      <div class="padel-card">
+        <h2 class="text-base font-medium text-gray-900 mb-4 flex items-center gap-2">
+          <mat-icon class="text-amber-500">euro</mat-icon>
+          Paiements & soldes
+        </h2>
+
+        <div class="flex flex-col gap-3">
+
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600">CA semaine</span>
+            <span class="font-semibold text-green-600">
+                  {{ stats()!.chiffreAffairesSemaine | number:'1.2-2' }}€
+                </span>
+          </div>
+
+          <mat-divider />
+
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600">Membres avec solde impayé</span>
+            <span class="font-medium"
+                  [class]="stats()!.membresAvecSoldeImpaye > 0
+                        ? 'text-red-600' : 'text-gray-900'">
+                  {{ stats()!.membresAvecSoldeImpaye }}
+                </span>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600">Total soldes impayés</span>
+            <span class="font-semibold"
+                  [class]="stats()!.totalSoldesImpayes > 0
+                        ? 'text-red-600' : 'text-gray-900'">
+                  {{ stats()!.totalSoldesImpayes | number:'1.2-2' }}€
+                </span>
+          </div>
+
+          @if (stats()!.membresAvecSoldeImpaye > 0) {
+            <button mat-stroked-button color="warn" class="w-full mt-2"
+                    (click)="router.navigate(['/membres'],
+                          { queryParams: { filtre: 'solde' } })">
+              <mat-icon>visibility</mat-icon>
+              Voir les membres concernés
+            </button>
+          }
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===================== TAUX D'OCCUPATION ===================== -->
+    <div class="padel-card">
+      <h2 class="text-base font-medium text-gray-900 mb-4 flex items-center gap-2">
+        <mat-icon class="text-green-500">bar_chart</mat-icon>
+        Taux d'occupation par site — semaine en cours
+      </h2>
+
+      @if (stats()!.tauxOccupationParSite.length === 0) {
+        <p class="text-sm text-gray-500 text-center py-4">
+          Aucune donnée disponible
+        </p>
+      }
+
+      <div class="flex flex-col gap-4">
+        @for (item of stats()!.tauxOccupationParSite; track item.siteId) {
+          <div>
+            <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm font-medium text-gray-900">
+                    {{ item.siteNom }}
+                  </span>
+              <div class="flex items-center gap-3">
+                    <span class="text-xs text-gray-500">
+                      {{ item.creneauxOccupes }} / {{ item.creneauxTotal }} créneaux
+                    </span>
+                <span class="text-sm font-semibold"
+                      [class]="tauxCouleur(item.tauxOccupation)">
+                      {{ item.tauxOccupation | number:'1.1-1' }}%
+                    </span>
+              </div>
+            </div>
+
+            <!-- Barre de progression -->
+            <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+              <div class="h-3 rounded-full transition-all duration-500"
+                   [class]="tauxBarreCouleur(item.tauxOccupation)"
+                   [style.width.%]="item.tauxOccupation">
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <button mat-stroked-button
+              (click)="router.navigate(['/matchs/nouveau'])">
+        <mat-icon>add</mat-icon>
+        Nouveau match
+      </button>
+      <button mat-stroked-button
+              (click)="router.navigate(['/membres/nouveau'])">
+        <mat-icon>person_add</mat-icon>
+        Nouveau membre
+      </button>
+      <button mat-stroked-button
+              (click)="router.navigate(['/sites'])">
+        <mat-icon>location_city</mat-icon>
+        Gérer les sites
+      </button>
+      <button mat-stroked-button
+              (click)="router.navigate(['/matchs'],
+                    { queryParams: { vue: 'publics' } })">
+        <mat-icon>public</mat-icon>
+        Matchs publics
+      </button>
+    </div>
+
+  }
+</div>

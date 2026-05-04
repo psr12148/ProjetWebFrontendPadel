@@ -1,21 +1,15 @@
 import {HttpErrorResponse, HttpInterceptorFn} from '@angular/common/http';
 import {inject} from '@angular/core';
-import {Router} from '@angular/router';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {catchError, throwError} from 'rxjs';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
-  const router = inject(Router);
+
   const snakBar = inject(MatSnackBar);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       switch (error.status) {
-        case 401:
-          // Token expiré ou invalide → retour login
-          localStorage.removeItem('token');
-          router.navigate(['/auth/login']);
-          break;
         case 403:
           snakBar.open('Accès refusé', 'Fermer', { duration: 4000 });
           break;

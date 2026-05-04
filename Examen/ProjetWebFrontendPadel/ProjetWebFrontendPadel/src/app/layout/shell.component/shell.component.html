@@ -1,0 +1,81 @@
+<mat-sidenav-container class="h-screen">
+
+  <!-- Sidenav -->
+  <mat-sidenav [mode]="isMobile() ? 'over' : 'side'"
+               [opened]="!isMobile() || sidenavOpen()"
+               class="w-64"
+               (closedStart)="sidenavOpen.set(false)">
+
+    <!-- Logo -->
+    <div class="p-4 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-green-100 flex items-center
+                        justify-center">
+          <mat-icon class="text-green-600">sports_tennis</mat-icon>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900 text-sm">Padel Manager</p>
+          <p class="text-xs text-gray-500">
+            {{ authSvc.currentUser()?.typeLabel }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <mat-nav-list class="py-2">
+      @for (item of navItems(); track item.route) {
+        @if (!item.adminOnly || authSvc.isAdmin()) {
+          <a mat-list-item
+             [routerLink]="item.route"
+             routerLinkActive="bg-green-50 text-green-700"
+             [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+             (click)="isMobile() && sidenavOpen.set(false)"
+             class="mx-2 rounded-lg mb-0.5">
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            <span matListItemTitle>{{ item.label }}</span>
+          </a>
+        }
+      }
+    </mat-nav-list>
+
+    <!-- Utilisateur + Logout -->
+    <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
+      @if (authSvc.currentUser()) {
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-green-600 flex items-center
+                          justify-center text-white text-sm font-medium">
+            {{ authSvc.currentUser()!.prenom.charAt(0) }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">
+              {{ authSvc.currentUser()!.prenom }} {{ authSvc.currentUser()!.nom }}
+            </p>
+            <p class="text-xs text-gray-500 truncate">
+              {{ authSvc.currentUser()!.matricule }}
+            </p>
+          </div>
+        </div>
+      }
+      <button mat-stroked-button class="w-full" (click)="authSvc.logout()">
+        <mat-icon>logout</mat-icon>
+        Se déconnecter
+      </button>
+    </div>
+
+  </mat-sidenav>
+
+  <!-- Contenu -->
+  <mat-sidenav-content>
+    @if (isMobile()) {
+      <mat-toolbar color="primary" class="sticky top-0 z-10">
+        <button mat-icon-button (click)="sidenavOpen.set(!sidenavOpen())">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <span class="ml-2">Padel Manager</span>
+      </mat-toolbar>
+    }
+    <router-outlet />
+  </mat-sidenav-content>
+
+</mat-sidenav-container>

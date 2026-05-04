@@ -1,0 +1,103 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+  <div class="w-full max-w-sm">
+
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16
+                      rounded-full bg-green-100 mb-4">
+        <mat-icon class="text-green-600"
+                  style="font-size:36px;width:36px;height:36px">
+          sports_tennis
+        </mat-icon>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900">Padel Manager</h1>
+      <p class="text-sm text-gray-500 mt-1">Connectez-vous à votre espace</p>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="padel-card">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+        <div class="flex flex-col gap-4">
+
+          <mat-form-field class="w-full">
+            <mat-label>Email</mat-label>
+            <input matInput type="email" formControlName="email"
+                   placeholder="votre@email.com" autocomplete="email">
+            <mat-icon matSuffix class="text-gray-400">email</mat-icon>
+            @if (form.get('email')?.hasError('required')
+            && form.get('email')?.touched) {
+              <mat-error>L'email est obligatoire</mat-error>
+            }
+            @if (form.get('email')?.hasError('email')) {
+              <mat-error>Format invalide</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field class="w-full">
+            <mat-label>Mot de passe</mat-label>
+            <input matInput [type]="showPassword() ? 'text' : 'password'"
+                   formControlName="motDePasse"
+                   autocomplete="current-password">
+            <button mat-icon-button matSuffix type="button"
+                    (click)="showPassword.set(!showPassword())">
+              <mat-icon class="text-gray-400">
+                {{ showPassword() ? 'visibility_off' : 'visibility' }}
+              </mat-icon>
+            </button>
+            @if (form.get('motDePasse')?.hasError('required')
+            && form.get('motDePasse')?.touched) {
+              <mat-error>Le mot de passe est obligatoire</mat-error>
+            }
+          </mat-form-field>
+
+        </div>
+
+        <!-- Erreur login -->
+        @if (loginError()) {
+          <div class="mt-3 p-3 rounded-lg bg-red-50 border border-red-200
+                          flex items-center gap-2">
+            <mat-icon class="text-red-500 text-sm">error_outline</mat-icon>
+            <span class="text-sm text-red-700">{{ loginError() }}</span>
+          </div>
+        }
+
+        <button mat-flat-button color="primary" type="submit"
+                class="w-full mt-6"
+                [disabled]="form.invalid || loading()">
+          @if (loading()) {
+            <mat-spinner diameter="20" class="mr-2" />
+          }
+          Se connecter
+        </button>
+
+      </form>
+    </div>
+
+    <!-- Info types -->
+    <div class="mt-4 p-3 rounded-lg bg-white border border-gray-200">
+      <p class="text-xs text-gray-500 text-center mb-2">Types de membres</p>
+      <div class="flex justify-around text-center">
+        <div>
+          <code class="text-xs bg-purple-100 text-purple-700 px-1 rounded">
+            Gxxxx
+          </code>
+          <p class="text-xs text-gray-400 mt-0.5">Global — 3 sem.</p>
+        </div>
+        <div>
+          <code class="text-xs bg-blue-100 text-blue-700 px-1 rounded">
+            Sxxxxx
+          </code>
+          <p class="text-xs text-gray-400 mt-0.5">Site — 2 sem.</p>
+        </div>
+        <div>
+          <code class="text-xs bg-orange-100 text-orange-700 px-1 rounded">
+            Lxxxxx
+          </code>
+          <p class="text-xs text-gray-400 mt-0.5">Libre — 5 j.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

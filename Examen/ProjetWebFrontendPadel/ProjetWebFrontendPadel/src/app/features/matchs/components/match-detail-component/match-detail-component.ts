@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe } from '@angular/common';
+import { AuthService } from '../../../../core/services/auth-service';
 
 @Component({
   selector: 'app-match-detail-component',
@@ -30,15 +31,21 @@ export class MatchDetailComponent implements OnInit{
   @Input() id!: string;
 
   readonly router = inject(Router);
-  private matchSvc = inject(MatchService)
+  private matchSvc = inject(MatchService);
+  private authSvc  = inject(AuthService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
 
   match   = signal<Match | null>(null);
   loading = signal(false);
 
-  // TODO : remplacer par l'id du membre connecté (depuis AuthService)
-  membreConnecteId = 1;
+  /**
+   * Getter qui récupère l'ID du membre connecté à la volée.
+   * Évite de stocker une valeur potentiellement obsolète.
+   */
+  get membreConnecteId(): number | null {
+    return this.authSvc.getMembreId();
+  }
 
   ngOnInit(): void {
     this.load();
@@ -62,6 +69,12 @@ export class MatchDetailComponent implements OnInit{
   // --- Actions ---
 
   onPayer(participation: Participation): void {
+    const membreId = this.membreConnecteId;
+    if (!membreId) {
+      this.snackBar.open('Vous devez être connecté', 'Fermer', { duration: 3000 });
+      return;
+    }
+
     const ref = this.dialog.open(ConfirmDialog, {
       width: '400px',
       data: {
@@ -71,9 +84,10 @@ export class MatchDetailComponent implements OnInit{
       },
     });
 
+
     ref.afterClosed().subscribe(confirmed => {
       if (!confirmed) return;
-      this.matchSvc.payerParticipation(+this.id, this.membreConnecteId).subscribe({
+      this.matchSvc.payerParticipation(+this.id, membreId).subscribe({
         next: () => {
           this.snackBar.open('Paiement confirmé !', 'Fermer', { duration: 3000 });
           this.load();
@@ -90,7 +104,13 @@ export class MatchDetailComponent implements OnInit{
   }
 
   onRejoindre(): void {
-    this.matchSvc.rejoindreMatchPublic(+this.id, this.membreConnecteId).subscribe({
+    const membreId = this.membreConnecteId;
+    if (!membreId) {
+      this.snackBar.open('Vous devez être connecté', 'Fermer', { duration: 3000 });
+      return;
+    }
+
+    this.matchSvc.rejoindreMatchPublic(+this.id, membreId).subscribe({
       next: () => {
         this.snackBar.open('Vous avez rejoint le match !', 'Fermer', { duration: 3000 });
         this.load();

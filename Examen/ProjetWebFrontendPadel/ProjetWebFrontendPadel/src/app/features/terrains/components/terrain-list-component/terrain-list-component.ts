@@ -15,6 +15,7 @@ import {TerrainService} from '../../services/terrain-service';
 import {Terrain} from '../../models/terrain.model';
 import {Site} from '../../../sites/models/site.model';
 import {ConfirmDialog} from '../../../../shared/components/confirm-dialog/confirm-dialog';
+import { AuthService } from '../../../../core/services/auth-service';
 
 @Component({
   selector: 'app-terrain-list-component',
@@ -33,6 +34,7 @@ import {ConfirmDialog} from '../../../../shared/components/confirm-dialog/confir
 })
 export class TerrainListComponent implements OnInit{
   readonly router = inject(Router);
+  readonly authSvc   = inject(AuthService);
   private route = inject(ActivatedRoute);
   private terrainSvc = inject(TerrainService);
   private siteSvc = inject(SiteService);
@@ -83,6 +85,19 @@ export class TerrainListComponent implements OnInit{
       error: () => {
         this.error.set('Impossible de charger les terrains');
         this.loading.set(false);
+      }
+    });
+  }
+
+  /**
+   * Lance le workflow de réservation : navigue vers /matchs en passant
+   * le terrainId (et le siteId) en queryParam pour pré-filtrer.
+   */
+  onVoirMatchs(terrain: Terrain): void {
+    this.router.navigate(['/matchs'], {
+      queryParams: {
+        terrainId: terrain.id,
+        siteId:    this.siteIdSelectionne()
       }
     });
   }

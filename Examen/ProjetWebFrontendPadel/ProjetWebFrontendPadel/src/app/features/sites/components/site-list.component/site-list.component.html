@@ -8,11 +8,13 @@
         {{ sites().length }} site(s) enregistré(s)
       </p>
     </div>
-    <button mat-flat-button color="primary"
-            (click)="router.navigate(['/sites/nouveau'])">
-      <mat-icon>add</mat-icon>
-      Nouveau site
-    </button>
+    @if (authSvc.isAdmin()) {
+      <button mat-flat-button color="primary"
+              (click)="router.navigate(['/sites/nouveau'])">
+        <mat-icon>add</mat-icon>
+        Nouveau site
+      </button>
+    }
   </div>
 
   <!-- Chargement -->
@@ -120,16 +122,29 @@
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let s">
             <div class="flex items-center gap-1 justify-end">
-              <button mat-icon-button
-                      matTooltip="Modifier"
-                      (click)="onEdit(s)">
-                <mat-icon class="text-gray-500">edit</mat-icon>
+
+              <!-- Bouton Réserver : visible à TOUS les membres connectés -->
+              <button mat-flat-button color="primary"
+                      class="!min-w-0 !px-3"
+                      matTooltip="Voir les terrains de ce site"
+                      (click)="onReserver(s)">
+                <mat-icon>arrow_forward</mat-icon>
+                Réserver
               </button>
-              <button mat-icon-button
-                      matTooltip="Supprimer"
-                      (click)="onDelete(s)">
-                <mat-icon class="text-red-400">delete_outline</mat-icon>
-              </button>
+
+              <!-- Boutons admin -->
+              @if (authSvc.isAdmin()) {
+                <button mat-icon-button
+                        matTooltip="Modifier"
+                        (click)="onEdit(s)">
+                  <mat-icon class="text-gray-500">edit</mat-icon>
+                </button>
+                <button mat-icon-button
+                        matTooltip="Supprimer"
+                        (click)="onDelete(s)">
+                  <mat-icon class="text-red-400">delete_outline</mat-icon>
+                </button>
+              }
             </div>
           </td>
         </ng-container>
@@ -151,13 +166,19 @@
         location_city
       </mat-icon>
       <p class="text-gray-500 text-lg mb-1">Aucun site enregistré</p>
-      <p class="text-gray-400 text-sm mb-6">
-        Créez votre premier site pour commencer
-      </p>
-      <button mat-flat-button color="primary"
-              (click)="router.navigate(['/sites/nouveau'])">
-        Créer un site
-      </button>
+      @if (authSvc.isAdmin()) {
+        <p class="text-gray-400 text-sm mb-6">
+          Créez votre premier site pour commencer
+        </p>
+        <button mat-flat-button color="primary"
+                (click)="router.navigate(['/sites/nouveau'])">
+          Créer un site
+        </button>
+      } @else {
+        <p class="text-gray-400 text-sm">
+          Aucun site n'est disponible pour le moment.
+        </p>
+      }
     </div>
   }
 

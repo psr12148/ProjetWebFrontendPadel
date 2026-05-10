@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
+import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
 
@@ -9,42 +11,43 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
 
-  // Auth (pas de guard - accessible sans être connecté)
-
-  /*
-    // Auth (pas de guard — accessible sans être connecté)
+  // Auth — accessible sans être connecté
   {
     path: 'auth',
     loadChildren: () =>
       import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES),
   },
 
-  // Shell principal (layout avec sidenav) — protégé
+  // Shell principal (sidenav + toolbar) — protégé par authGuard
   {
     path: '',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./layout/shell/shell.component').then(m => m.ShellComponent),
+      import('./layout/shell.component/shell.component').then(m => m.ShellComponent),
     children: [
 
+      // Dashboard — admin uniquement
+      // Note : la route reste accessible mais retourne 403 pour les non-admins.
+      // Le menu "Dashboard" est déjà caché aux non-admins via adminOnly: true.
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
+          import('./features/dashboard/dashboard.component/dashboard.component').then(m => m.DashboardComponent),
       },
 
-      // Gestion des sites (admin)
+      // Sites — accessibles en LECTURE à tous les membres connectés
+      // Les actions write (POST/PUT/DELETE) sont protégées côté backend par
+      // SecurityConfig (hasRole("ADMIN")).
       {
         path: 'sites',
-        canActivate: [adminGuard],
         loadChildren: () =>
           import('./features/sites/sites.routes').then(m => m.SITES_ROUTES),
       },
 
-      // Gestion des terrains (admin)
+      // Terrains — accessibles en LECTURE à tous les membres connectés
+      // Les actions write sont protégées côté backend.
       {
         path: 'terrains',
-        canActivate: [adminGuard],
         loadChildren: () =>
           import('./features/terrains/terrains.routes').then(m => m.TERRAINS_ROUTES),
       },
@@ -55,13 +58,6 @@ export const routes: Routes = [
         canActivate: [adminGuard],
         loadChildren: () =>
           import('./features/membres/membres.routes').then(m => m.MEMBRES_ROUTES),
-      },
-
-      // Réservations (tous les membres connectés)
-      {
-        path: 'reservations',
-        loadChildren: () =>
-          import('./features/reservations/reservations.routes').then(m => m.RESERVATIONS_ROUTES),
       },
 
       // Matchs (tous les membres connectés)
@@ -78,9 +74,9 @@ export const routes: Routes = [
   {
     path: '**',
     loadComponent: () =>
-      import('./shared/components/not-found/not-found.component').then(m => m.NotFoundComponent),
-  },
+      import('./shared/components/not-found.component/not-found.component').then(m => m.NotFoundComponent),
+  }
 
-  */
+
 
 ];

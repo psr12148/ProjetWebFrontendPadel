@@ -59,7 +59,10 @@
               Date
             </p>
             <p class="font-medium text-gray-900">
-              {{ match()!.dateHeure | date:'EEEE dd MMMM yyyy':'':'fr' }}
+              <!-- CORRECTION : suppression du :'':'fr' qui forçait la locale 'fr'
+                   alors que seule 'fr-BE' est enregistrée. Sans ces paramètres,
+                   Angular utilise automatiquement le LOCALE_ID = 'fr-BE'. -->
+              {{ match()!.dateHeure | date:'EEEE dd MMMM yyyy' }}
             </p>
           </div>
           <div>
@@ -198,3 +201,4 @@
   }
 
 </div>
+

@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatchService } from '../../services/match-service';
 import { SiteService } from '../../../sites/services/site-service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -16,6 +16,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
 import { DatePipe } from '@angular/common';
+import { AuthService } from '../../../../core/services/auth-service';
+
+type VueMatch = 'mes-matchs' | 'publics' | 'terrain';
 
 @Component({
   selector: 'app-match-list-component',
@@ -38,6 +41,8 @@ import { DatePipe } from '@angular/common';
 export class MatchListComponent implements OnInit {
 
   readonly router = inject(Router);
+  readonly authSvc = inject(AuthService);
+  private route    = inject(ActivatedRoute);
   private matchSvc = inject(MatchService)
   private siteSvc = inject(SiteService);
   private snackBar = inject(MatSnackBar);
@@ -45,23 +50,37 @@ export class MatchListComponent implements OnInit {
   matches = signal<Match[]>([]);
   sites = signal<Site[]>([]);
   loading = signal(false);
-  vue = signal<'mes-matchs' | 'publics'>('mes-matchs');
+  vue     = signal<VueMatch>('mes-matchs');
 
+  // Filtres
   siteIdFiltre: number | null = null;
+  terrainIdFiltre: number | null = null;
   dateFiltre = new Date().toISOString().slice(0, 10);
-
-  // TODO : remplacer par l'id du membre connecté (depuis AuthService)
-  private membreId = 1;
 
   colonnes = ['dateHeure', 'lieu', 'type', 'joueurs', 'statut', 'actions'];
 
   ngOnInit(): void {
     this.siteSvc.findAll().subscribe(s => this.sites.set(s));
+
+    // Vérifie les queryParams pour pré-sélectionner un terrain (workflow)
+    const terrainId = this.route.snapshot.queryParams['terrainId'];
+    const siteId    = this.route.snapshot.queryParams['siteId'];
+
+    if (terrainId) {
+      this.terrainIdFiltre = +terrainId;
+      this.siteIdFiltre    = siteId ? +siteId : null;
+      this.vue.set('terrain');  // vue spéciale "matchs d'un terrain"
+    }
+
     this.load();
   }
 
-  setVue(vue: 'mes-matchs' | 'publics'): void {
+  setVue(vue: VueMatch): void {
     this.vue.set(vue);
+    // Quand on change de vue manuellement, on retire le filtre terrain
+    if (vue !== 'terrain') {
+      this.terrainIdFiltre = null;
+    }
     this.load();
   }
 
@@ -72,23 +91,61 @@ export class MatchListComponent implements OnInit {
   load(): void {
     this.loading.set(true);
 
-    const obs$ = this.vue() === 'publics'
-      ? this.matchSvc.findPublicsDisponibles()
-      : this.siteIdFiltre
-        ? this.matchSvc.findBySiteAndDate(this.siteIdFiltre, this.dateFiltre)
-        : this.matchSvc.findByMembre(this.membreId);
+    const obs$ = this.choisirObservable();
 
     obs$.subscribe({
       next: (matches) => {
-        this.matches.set(matches);
+        // Filtrage côté client par terrainId si nécessaire
+        // (le backend n'a pas d'endpoint findByTerrain dédié, mais
+        // la propriété terrainId est présente dans Match)
+        const filtres = this.terrainIdFiltre
+          ? matches.filter(m => m.terrainId === this.terrainIdFiltre)
+          : matches;
+        this.matches.set(filtres);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
     });
   }
 
+  /**
+   * Choisit l'endpoint backend selon la vue active et les filtres.
+   */
+  private choisirObservable() {
+    const membreId = this.authSvc.getMembreId();
+
+    // Vue "terrain" : matchs d'un terrain précis (via siteId + filtrage local)
+    if (this.vue() === 'terrain' && this.siteIdFiltre) {
+      return this.matchSvc.findBySiteAndDate(this.siteIdFiltre, this.dateFiltre);
+    }
+
+    // Vue "publics disponibles"
+    if (this.vue() === 'publics') {
+      return this.matchSvc.findPublicsDisponibles();
+    }
+
+    // Vue "mes matchs" avec filtre site/date
+    if (this.siteIdFiltre) {
+      return this.matchSvc.findBySiteAndDate(this.siteIdFiltre, this.dateFiltre);
+    }
+
+    // Vue "mes matchs" sans filtre → mes matchs uniquement
+    if (membreId) {
+      return this.matchSvc.findByMembre(membreId);
+    }
+
+    // Fallback (membre non connecté — ne devrait pas arriver)
+    return this.matchSvc.findPublicsDisponibles();
+  }
+
   onRejoindre(match: Match): void {
-    this.matchSvc.rejoindreMatchPublic(match.id, this.membreId).subscribe({
+    const membreId = this.authSvc.getMembreId();
+    if (!membreId) {
+      this.snackBar.open('Vous devez être connecté', 'Fermer', { duration: 3000 });
+      return;
+    }
+
+    this.matchSvc.rejoindreMatchPublic(match.id, membreId).subscribe({
       next: () => {
         this.snackBar.open('Vous avez rejoint le match !', 'Fermer', { duration: 3000 });
         this.router.navigate(['/matchs', match.id]);

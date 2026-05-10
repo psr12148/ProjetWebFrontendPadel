@@ -1,0 +1,25 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-50">
+  <div class="text-center">
+
+    <div class="inline-flex items-center justify-center w-24 h-24
+                    rounded-full bg-green-100 mb-6">
+      <mat-icon class="text-green-500"
+                style="font-size:48px;width:48px;height:48px">
+        sports_tennis
+      </mat-icon>
+    </div>
+
+    <h1 class="text-6xl font-bold text-gray-900 mb-2">404</h1>
+    <p class="text-xl text-gray-600 mb-2">Page introuvable</p>
+    <p class="text-sm text-gray-400 mb-8">
+      Cette page n'existe pas ou a été déplacée.
+    </p>
+
+    <button mat-flat-button color="primary"
+            (click)="router.navigate(['/dashboard'])">
+      <mat-icon>home</mat-icon>
+      Retour au dashboard
+    </button>
+
+  </div>
+</div>

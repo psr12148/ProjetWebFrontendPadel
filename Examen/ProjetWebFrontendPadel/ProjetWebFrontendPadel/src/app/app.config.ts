@@ -10,10 +10,16 @@ import { routes } from './app.routes';
 import {provideHttpClient, withInterceptors} from '@angular/common/http';
 import {authInterceptor} from './core/interceptors/auth.interceptor';
 import {errorInterceptor} from './core/interceptors/error.interceptor';
-import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
 import {DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE, NativeDateAdapter} from '@angular/material/core';
-import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from '@angular/material/form-field';
-import {formatDate} from '@angular/common';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { formatDate, registerLocaleData } from '@angular/common';
+
+// CORRECTION : Enregistrement de la locale fr-BE
+// Sans cela, Angular ne connaît que en-US et lève NG0701 dès qu'on utilise
+// le pipe |date avec LOCALE_ID = 'fr-BE'.
+import localeFrBe from '@angular/common/locales/fr-BE';
+import localeFrBeExtra from '@angular/common/locales/extra/fr-BE';
+registerLocaleData(localeFrBe, 'fr-BE', localeFrBeExtra);
 
 /**
  * This custom date adapter is used to parse and format dates in the format dd/MM/yyyy.
@@ -95,7 +101,7 @@ export const appConfig: ApplicationConfig = {
     ),
 
     // ===== Angular Material =====
-    provideAnimationsAsync(),
+    //provideAnimationsAsync(),
 
     // Locale belge pour les datepickers Material
     {provide: DateAdapter, useClass: FrBeLocaleDateAdapter},

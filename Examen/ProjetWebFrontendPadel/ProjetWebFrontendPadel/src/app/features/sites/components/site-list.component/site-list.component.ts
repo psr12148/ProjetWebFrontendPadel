@@ -11,6 +11,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatChipsModule} from '@angular/material/chips';
+import { AuthService } from '../../../../core/services/auth-service';
 
 @Component({
   selector: 'app-site-list.component',
@@ -28,6 +29,7 @@ import {MatChipsModule} from '@angular/material/chips';
 export class SiteListComponent implements OnInit{
 
   readonly router = inject(Router);
+  readonly authSvc   = inject(AuthService);
   private siteService = inject(SiteService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
@@ -57,6 +59,17 @@ export class SiteListComponent implements OnInit{
         this.error.set('Impossible de charger les sites.');
         this.loading.set(false);
       },
+    });
+  }
+
+  /**
+   * Lance le workflow de réservation pour ce site :
+   * navigue vers /terrains avec le siteId en queryParam.
+   * La page Terrains pré-sélectionnera ce site (déjà géré dans son ngOnInit).
+   */
+  onReserver(site: Site): void {
+    this.router.navigate(['/terrains'], {
+      queryParams: { siteId: site.id }
     });
   }
 

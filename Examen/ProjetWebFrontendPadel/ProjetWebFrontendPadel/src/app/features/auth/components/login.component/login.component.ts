@@ -51,7 +51,12 @@ export class LoginComponent {
       next: (user) => {
         this.loading.set(false);
         this.snack.open(`Bienvenue ${user.prenom} !`, 'Fermer', { duration: 3000 });
-        this.router.navigate(['/dashboard']);
+
+        // CORRECTION : redirection conditionnelle selon le rôle
+        // - admin → /dashboard (vue de gestion)
+        // - membre → /sites (workflow de réservation)
+        const destination = user.admin ? '/dashboard' : '/sites';
+        this.router.navigate([destination]);
       },
       error: (err) => {
         this.loading.set(false);

@@ -11,7 +11,7 @@ export class AuthService {
 
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly apiUrl = 'http://localhost:8080/api/auth';
+  private readonly apiUrl = 'http://localhost:8080/api/v1/auth';
 
   private readonly TOKEN_KEY = 'padel_token';
   private readonly USER_KEY  = 'padel_user';
@@ -36,8 +36,27 @@ export class AuthService {
     );
   }
 
+  /**
+   * Déconnexion locale (vide le storage et redirige vers login).
+   *
+   * IMPORTANT — pas d'appel HTTP au backend pour /logout :
+   * - Le backend JWT est stateless, il n'a pas de session à invalider
+   * - Si on appelle /logout avec un token expiré → 401 → boucle infinie
+   *   via auth.interceptor qui rappelle logout()
+   *
+   * Si vous voulez vraiment notifier le backend (ex. blacklist de tokens),
+   * faites-le UNIQUEMENT si le token est encore valide.
+   */
   logout(): void {
-    this.http.post(`${this.apiUrl}/logout`, {}).subscribe();
+    // Tentative de logout côté backend UNIQUEMENT si le token est encore valide
+    // (évite la boucle 401 → logout → 401 → ...)
+    if (this.hasValidToken()) {
+      this.http.post(`${this.apiUrl}/logout`, {}).subscribe({
+        error: () => { /* on ignore l'erreur, le logout local suffit */ }
+      });
+    }
+
+    // Logout local — toujours exécuté
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.currentUser.set(null);
@@ -71,12 +90,30 @@ export class AuthService {
     return this.currentUser()?.membreId ?? null;
   }
 
+  /**
+   * Vérifie qu'un token JWT est présent ET non expiré.
+   *
+   * Décodage base64-URL (les JWT utilisent '-' et '_' au lieu de '+' et '/').
+   */
   hasValidToken(): boolean {
     const token = this.getToken();
     if (!token) return false;
+
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.exp * 1000 > Date.now();
+      const parts = token.split('.');
+      if (parts.length !== 3) return false;
+
+      // Conversion base64-URL → base64 standard avant atob
+      const payloadBase64 = parts[1]
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+
+      // Padding manquant éventuel
+      const padding = '='.repeat((4 - payloadBase64.length % 4) % 4);
+      const payload = JSON.parse(atob(payloadBase64 + padding));
+
+      // exp en secondes → ms ; vérifie que le token n'est pas expiré
+      return typeof payload.exp === 'number' && payload.exp * 1000 > Date.now();
     } catch {
       return false;
     }

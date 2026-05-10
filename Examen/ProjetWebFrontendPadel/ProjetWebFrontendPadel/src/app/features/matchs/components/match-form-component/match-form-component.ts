@@ -16,6 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatRadioModule } from '@angular/material/radio';
+import { AuthService } from '../../../../core/services/auth-service';
 
 @Component({
   selector: 'app-match-form-component',
@@ -40,14 +41,13 @@ export class MatchFormComponent implements OnInit {
   private matchSvc  = inject(MatchService);
   private siteSvc   = inject(SiteService);
   private terrainSvc = inject(TerrainService);
+  private authSvc    = inject(AuthService)
   private snackBar  = inject(MatSnackBar);
 
   submitting = signal(false);
   sites      = signal<Site[]>([]);
   terrains   = signal<Terrain[]>([]);
 
-  // TODO : remplacer par l'id du membre connecté (depuis AuthService)
-  private organisateurId = 1;
 
   form = this.fb.group({
     siteId:    [null as number | null, Validators.required],
@@ -81,11 +81,22 @@ export class MatchFormComponent implements OnInit {
       return;
     }
 
+    const organisateurId = this.authSvc.getMembreId();
+    if (!organisateurId) {
+      this.snackBar.open('Vous devez être connecté pour créer un match', 'Fermer', {
+        duration: 4000,
+        panelClass: ['error-snackbar'],
+      });
+      return;
+    }
+
     this.submitting.set(true);
 
-    // Convertit datetime-local en ISO string
-    const dateHeure = new Date(this.form.value.dateHeure!).toISOString()
-      .slice(0, 19);
+    let dateHeure = this.form.value.dateHeure!;
+    // L'input HTML retourne "2026-05-21T09:00", on ajoute ":00" pour les secondes
+    if (dateHeure.length === 16) {
+      dateHeure += ':00';
+    }
 
     const request: MatchRequest = {
       terrainId: this.form.value.terrainId!,
@@ -93,7 +104,7 @@ export class MatchFormComponent implements OnInit {
       typeMatch: this.form.value.typeMatch!,
     };
 
-    this.matchSvc.creerMatch(this.organisateurId, request).subscribe({
+    this.matchSvc.creerMatch(organisateurId, request).subscribe({
       next: (match) => {
         this.snackBar.open('Match créé avec succès !', 'Fermer', { duration: 3000 });
         this.router.navigate(['/matchs', match.id]);

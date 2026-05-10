@@ -38,8 +38,8 @@ export class ShellComponent {
   navItems = signal([
     { label: 'Dashboard',  icon: 'dashboard',     route: '/dashboard',  adminOnly: true  },
     { label: 'Matchs',     icon: 'sports_tennis', route: '/matchs',     adminOnly: false },
-    { label: 'Sites',      icon: 'location_city', route: '/sites',      adminOnly: true  },
-    { label: 'Terrains',   icon: 'grid_view',     route: '/terrains',   adminOnly: true  },
+    { label: 'Sites',      icon: 'location_city', route: '/sites',      adminOnly: false  },
+    { label: 'Terrains',   icon: 'grid_view',     route: '/terrains',   adminOnly: false  },
     { label: 'Membres',    icon: 'group',         route: '/membres',    adminOnly: true  },
   ]);
 

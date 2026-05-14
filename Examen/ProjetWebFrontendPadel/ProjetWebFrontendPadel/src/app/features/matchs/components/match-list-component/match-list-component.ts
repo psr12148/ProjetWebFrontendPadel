@@ -138,6 +138,19 @@ export class MatchListComponent implements OnInit {
     return this.matchSvc.findPublicsDisponibles();
   }
 
+  onNouveauMatch(): void {
+    const queryParams: { siteId?: number; terrainId?: number } = {};
+
+    if (this.terrainIdFiltre) {
+      queryParams.terrainId = this.terrainIdFiltre;
+    }
+    if (this.siteIdFiltre) {
+      queryParams.siteId = this.siteIdFiltre;
+    }
+
+    this.router.navigate(['/matchs/nouveau'], { queryParams });
+  }
+
   onRejoindre(match: Match): void {
     const membreId = this.authSvc.getMembreId();
     if (!membreId) {

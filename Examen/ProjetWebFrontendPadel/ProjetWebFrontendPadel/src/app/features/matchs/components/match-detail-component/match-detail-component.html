@@ -89,13 +89,26 @@
       <mat-divider class="my-4" />
 
       <!-- Résumé financier -->
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between flex-wrap gap-2">
         <div class="flex items-center gap-2 text-sm text-gray-600">
           <mat-icon class="text-green-500">euro</mat-icon>
           Montant total :
           <strong class="text-gray-900">{{ match()!.montantTotal }}€</strong>
           ({{ match()!.montantTotal / 4 }}€ / joueur)
         </div>
+        <!-- Reste à payer -->
+        @if (match()!.soldeRestant > 0) {
+          <div class="text-sm text-gray-600">
+            Reste à payer :
+            <strong class="text-amber-600">{{ match()!.soldeRestant }}€</strong>
+          </div>
+        } @else {
+          <div class="text-sm text-green-600 font-medium">
+            <mat-icon class="align-middle"
+                      style="font-size:16px;width:16px;height:16px">check_circle</mat-icon>
+            Match entièrement payé
+          </div>
+        }
         <div class="text-sm text-gray-600">
           Places :
           <strong [class]="match()!.complet ? 'text-red-600' : 'text-green-600'">
@@ -192,7 +205,7 @@
           les joueurs à votre match privé.
         </p>
         <button mat-flat-button color="primary"
-                (click)="router.navigate(['/membres'])">
+                (click)="onInviterJoueur()">
           <mat-icon>person_search</mat-icon>
           Chercher un membre
         </button>
@@ -201,4 +214,3 @@
   }
 
 </div>
-

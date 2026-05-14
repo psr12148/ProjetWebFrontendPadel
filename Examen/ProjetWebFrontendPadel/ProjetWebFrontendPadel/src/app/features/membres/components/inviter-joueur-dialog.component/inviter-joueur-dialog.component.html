@@ -1,0 +1,66 @@
+<h2 mat-dialog-title class="!text-lg !font-medium">Inviter un joueur</h2>
+
+<mat-dialog-content class="!pt-2 !pb-4">
+
+  <!-- Champ de recherche -->
+  <mat-form-field class="w-full">
+    <mat-label>Rechercher (nom, prénom, matricule)</mat-label>
+    <input matInput
+           [(ngModel)]="recherche"
+           (ngModelChange)="onRechercheChange($event)"
+           autocomplete="off"
+           placeholder="ex: Marie, G0001..." />
+    <mat-icon matSuffix class="text-gray-400">search</mat-icon>
+  </mat-form-field>
+
+  <!-- Chargement -->
+  @if (loading()) {
+    <div class="flex justify-center py-6">
+      <mat-spinner diameter="32" />
+    </div>
+  }
+
+  <!-- Liste des résultats -->
+  @if (!loading() && membres().length > 0) {
+    <div class="flex flex-col gap-2 max-h-72 overflow-y-auto">
+      @for (m of membres(); track m.id) {
+        <button class="flex items-center gap-3 p-3 rounded-lg
+                           border border-gray-200 hover:bg-green-50
+                           hover:border-green-300 transition-colors
+                           text-left w-full"
+                (click)="choisir(m)">
+          <div class="w-9 h-9 rounded-full bg-green-100 flex items-center
+                          justify-center text-green-700 font-medium text-sm
+                          flex-shrink-0">
+            {{ m.prenom.charAt(0) }}{{ m.nom.charAt(0) }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-gray-900 text-sm truncate">
+              {{ m.nomComplet }}
+            </p>
+            <p class="text-xs text-gray-500">{{ m.matricule }}</p>
+          </div>
+          <mat-icon class="text-gray-400">arrow_forward</mat-icon>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Aucun résultat -->
+  @if (!loading() && membres().length === 0 && rechercheEffectuee()) {
+    <div class="text-center py-8">
+      <mat-icon class="text-gray-300"
+                style="font-size:36px;width:36px;height:36px">
+        person_off
+      </mat-icon>
+      <p class="text-sm text-gray-500 mt-2">
+        Aucun membre trouvé
+      </p>
+    </div>
+  }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="annuler()">Annuler</button>
+</mat-dialog-actions>

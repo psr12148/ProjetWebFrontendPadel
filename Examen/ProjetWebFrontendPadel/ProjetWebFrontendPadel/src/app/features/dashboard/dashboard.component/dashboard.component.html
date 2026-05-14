@@ -9,10 +9,31 @@
         au {{ finSemaine() | date:'dd/MM/yyyy' }}
       </p>
     </div>
-    <button mat-icon-button matTooltip="Rafraîchir"
-            (click)="load()">
-      <mat-icon [class]="loading() ? 'animate-spin' : ''">refresh</mat-icon>
-    </button>
+
+    <!-- Navigation entre semaines -->
+    <div class="flex items-center gap-2">
+      <button mat-icon-button matTooltip="Semaine précédente"
+              (click)="semainePrecedente()">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+
+      <button mat-stroked-button
+              [disabled]="estSemaineCourante()"
+              matTooltip="Revenir à la semaine en cours"
+              (click)="retourAujourdhui()">
+        Aujourd'hui
+      </button>
+
+      <button mat-icon-button matTooltip="Semaine suivante"
+              (click)="semaineSuivante()">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+
+      <button mat-icon-button matTooltip="Rafraîchir"
+              (click)="load()">
+        <mat-icon [class]="loading() ? 'animate-spin' : ''">refresh</mat-icon>
+      </button>
+    </div>
   </div>
 
   <!-- Chargement -->

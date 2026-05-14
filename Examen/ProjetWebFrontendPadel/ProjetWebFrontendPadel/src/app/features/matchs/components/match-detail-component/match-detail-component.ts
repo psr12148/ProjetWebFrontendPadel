@@ -12,6 +12,10 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe } from '@angular/common';
 import { AuthService } from '../../../../core/services/auth-service';
+import {
+  InviterJoueurDialogComponent
+} from '../../../membres/components/inviter-joueur-dialog.component/inviter-joueur-dialog.component';
+import { MembreSearchResponse } from '../../../membres/models/membre.model';
 
 @Component({
   selector: 'app-match-detail-component',
@@ -124,6 +128,47 @@ export class MatchDetailComponent implements OnInit{
       },
     });
   }
+
+  onInviterJoueur(): void {
+    const organisateurId = this.membreConnecteId;
+    const m = this.match();
+    if (!organisateurId || !m) return;
+
+    // IDs des membres déjà inscrits (pour ne pas les proposer dans la liste)
+    const participantsExistants = m.participations
+      .filter(p => p.statut !== 'LIBERE')
+      .map(p => p.membreId);
+
+    const ref = this.dialog.open(InviterJoueurDialogComponent, {
+      width: '500px',
+      data: { participantsExistants },
+    });
+
+    ref.afterClosed().subscribe((joueur: MembreSearchResponse | undefined) => {
+      if (!joueur) return;  // utilisateur a annulé
+
+      this.matchSvc.ajouterJoueurPrive(+this.id, organisateurId, {
+        membreId: joueur.id,
+      }).subscribe({
+        next: () => {
+          this.snackBar.open(
+            `${joueur.nomComplet} a été ajouté au match`,
+            'Fermer',
+            { duration: 3000 }
+          );
+          this.load();  // recharge le match avec le nouveau joueur
+        },
+        error: (err) => {
+          const msg = err.error?.message ?? 'Impossible d\'ajouter ce joueur';
+          this.snackBar.open(msg, 'Fermer', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+          });
+        },
+      });
+    });
+  }
+
 
   // --- Helpers ---
 

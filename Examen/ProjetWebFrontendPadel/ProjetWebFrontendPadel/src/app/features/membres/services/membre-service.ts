@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Membre, MembreRequest, TypeMembre } from '../models/membre.model';
+import { Membre, MembreRequest, MembreSearchResponse, TypeMembre } from '../models/membre.model';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -24,6 +24,14 @@ export class MembreService {
 
   findAvecSoldeImpaye(): Observable<Membre[]> {
     return this.http.get<Membre[]>(`${this.apiUrl}/soldes-impayes`);
+  }
+
+  searchForInvitation(q: string = ''): Observable<MembreSearchResponse[]> {
+    const params = new HttpParams().set('q', q);
+    return this.http.get<MembreSearchResponse[]>(
+      `${this.apiUrl}/search-invitation`,
+      { params }
+    );
   }
 
   create(request: MembreRequest): Observable<Membre> {

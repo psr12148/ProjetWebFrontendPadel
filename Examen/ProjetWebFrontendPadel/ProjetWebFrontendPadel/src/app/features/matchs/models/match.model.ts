@@ -25,6 +25,7 @@ export interface Match {
   typeMatch: TypeMatch;
   statut: StatutMatch;
   montantTotal: number;
+  soldeRestant: number;
   nombreJoueursConfirmes: number;
   placesDisponibles: number;
   complet: boolean;

@@ -25,3 +25,11 @@ export interface MembreRequest {
   email: string;
   motDePasse: string;
 }
+
+export interface MembreSearchResponse {
+  id: number;
+  matricule: string;
+  nom: string;
+  prenom: string;
+  nomComplet: string;
+}

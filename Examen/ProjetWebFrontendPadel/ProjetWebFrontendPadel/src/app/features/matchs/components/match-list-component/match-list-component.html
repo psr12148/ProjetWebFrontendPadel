@@ -9,7 +9,7 @@
       </p>
     </div>
     <button mat-flat-button color="primary"
-            (click)="router.navigate(['/matchs/nouveau'])">
+            (click)="onNouveauMatch()">
       <mat-icon>add</mat-icon>
       Nouveau match
     </button>
@@ -189,7 +189,7 @@
         : 'Aucun match trouvé' }}
       </p>
       <button mat-flat-button color="primary" class="mt-4"
-              (click)="router.navigate(['/matchs/nouveau'])">
+              (click)="onNouveauMatch()">
         Créer un match
       </button>
     </div>

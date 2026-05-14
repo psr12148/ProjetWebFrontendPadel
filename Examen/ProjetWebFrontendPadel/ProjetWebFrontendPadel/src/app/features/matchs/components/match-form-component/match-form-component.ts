@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatchService } from '../../services/match-service';
 import { SiteService } from '../../../sites/services/site-service';
@@ -37,6 +37,7 @@ import { AuthService } from '../../../../core/services/auth-service';
 export class MatchFormComponent implements OnInit {
 
   readonly router  = inject(Router);
+  private route = inject(ActivatedRoute)
   private fb       = inject(FormBuilder);
   private matchSvc  = inject(MatchService);
   private siteSvc   = inject(SiteService);
@@ -57,7 +58,33 @@ export class MatchFormComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.siteSvc.findAll().subscribe(sites => this.sites.set(sites));
+    this.siteSvc.findAll().subscribe((sites) => {
+      this.sites.set(sites);
+
+      const siteIdParam    = this.route.snapshot.queryParams['siteId'];
+      const terrainIdParam = this.route.snapshot.queryParams['terrainId'];
+
+      if (siteIdParam) {
+        const siteId = +siteIdParam;
+        this.form.get('siteId')!.setValue(siteId);
+
+        // Charger les terrains du site, puis pré-sélectionner si terrainId fourni
+        this.terrainSvc.findBySite(siteId).subscribe(terrains => {
+          this.terrains.set(terrains);
+
+          if (terrainIdParam) {
+            const terrainId = +terrainIdParam;
+            // Vérifie que le terrain appartient bien au site
+            const terrainValide = terrains.some(t => t.id === terrainId);
+            if (terrainValide) {
+              this.form.get('terrainId')!.setValue(terrainId);
+            }
+          }
+        });
+      }
+    });
+
+
   }
 
   onSiteChange(siteId: number): void {

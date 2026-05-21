@@ -48,9 +48,13 @@
 
       <mat-form-field class="w-44">
         <mat-label>Date</mat-label>
-        <input matInput type="date"
+        <input matInput
+               [matDatepicker]="datePicker"
                [(ngModel)]="dateFiltre"
-               (ngModelChange)="onFiltreChange()">
+               (ngModelChange)="onFiltreChange()"
+               readonly>
+        <mat-datepicker-toggle matIconSuffix [for]="datePicker" />
+        <mat-datepicker #datePicker />
       </mat-form-field>
     }
   </div>

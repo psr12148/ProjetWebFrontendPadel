@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { InviterJoueurDialogComponent } from './inviter-joueur-dialog.component';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 describe('InviterJoueurDialogComponent', () => {
   let component: InviterJoueurDialogComponent;
@@ -9,6 +10,10 @@ describe('InviterJoueurDialogComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [InviterJoueurDialogComponent],
+      providers: [
+        { provide: MatDialogRef, useValue: {} },      // <-- Simule la référence
+        { provide: MAT_DIALOG_DATA, useValue: {} }    // <-- Simule les données
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(InviterJoueurDialogComponent);

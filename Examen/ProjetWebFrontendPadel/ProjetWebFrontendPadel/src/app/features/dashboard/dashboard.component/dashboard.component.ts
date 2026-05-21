@@ -8,17 +8,29 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatchService } from '../../matchs/services/match-service';
+import { SiteService } from '../../sites/services/site-service';
+import { Match, StatutMatch, TypeMatch } from '../../matchs/models/match.model';
+import { Site } from '../../sites/models/site.model';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { FormsModule } from '@angular/forms';
+import { MatTableModule } from '@angular/material/table';
 
 @Component({
   selector: 'app-dashboard.component',
   imports: [
     DecimalPipe,
     DatePipe,
+    FormsModule,
     MatProgressSpinnerModule,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
     MatDividerModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatTableModule
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
@@ -27,9 +39,19 @@ export class DashboardComponent implements OnInit {
 
   readonly router      = inject(Router);
   private dashboardSvc = inject(DashboardService);
+  private matchSvc = inject(MatchService);
+  private siteSvc = inject(SiteService);
 
   stats   = signal<DashboardStats | null>(null);
   loading = signal(false);
+
+  // --- Section "Tous les matchs de la semaine" ---
+  matchsSemaine        = signal<Match[]>([]);
+  matchsSemaineLoading = signal(false);
+  sites                = signal<Site[]>([]);
+  siteIdFiltre: number | null = null;
+
+  colonnesMatchs = ['dateHeure', 'lieu', 'organisateur', 'type', 'joueurs', 'statut', 'actions'];
 
   /**
    * Date de référence — utilisée pour calculer la semaine affichée.
@@ -45,6 +67,7 @@ export class DashboardComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.siteSvc.findAll().subscribe(s => this.sites.set(s));
     this.load();
   }
 
@@ -52,6 +75,7 @@ export class DashboardComponent implements OnInit {
     this.loading.set(true);
     // Format YYYY-MM-DD attendu par le backend
     const dateStr = this.formatDateIso(this.dateReference());
+
     this.dashboardSvc.getStats(dateStr).subscribe({
       next: (stats) => {
         this.stats.set(stats);
@@ -59,6 +83,26 @@ export class DashboardComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+
+    // Charge également la liste complète des matchs admin
+    this.loadMatchsSemaine();
+  }
+
+  loadMatchsSemaine(): void {
+    this.matchsSemaineLoading.set(true);
+    const dateStr = this.formatDateIso(this.dateReference());
+
+    this.matchSvc.findAllForAdmin(dateStr, this.siteIdFiltre).subscribe({
+      next: (matchs) => {
+        this.matchsSemaine.set(matchs);
+        this.matchsSemaineLoading.set(false);
+      },
+      error: () => this.matchsSemaineLoading.set(false),
+    });
+  }
+
+  onSiteFiltreChange(): void {
+    this.loadMatchsSemaine();
   }
 
 
@@ -129,6 +173,34 @@ export class DashboardComponent implements OnInit {
     if (taux >= 75) return 'bg-green-500';
     if (taux >= 40) return 'bg-amber-400';
     return 'bg-red-400';
+  }
+
+  typeBadgeClass(type: TypeMatch): string {
+    return type === 'PRIVE' ? 'badge-prive' : 'badge-public';
+  }
+
+  statutBadgeClass(statut: StatutMatch): string {
+    return {
+      EN_ATTENTE: 'badge-en-attente',
+      CONFIRME:   'badge-confirme',
+      ANNULE:     'badge-annule',
+    }[statut] ?? '';
+  }
+
+  statutLabel(statut: StatutMatch): string {
+    return {
+      EN_ATTENTE: 'En attente',
+      CONFIRME:   'Confirmé',
+      ANNULE:     'Annulé',
+    }[statut] ?? statut;
+  }
+
+  joueurIconClass(match: Match, position: number): string {
+    const confirmes = match.nombreJoueursConfirmes;
+    const inscrits  = 4 - match.placesDisponibles;
+    if (position <= confirmes) return 'text-green-500';
+    if (position <= inscrits)  return 'text-yellow-500';
+    return 'text-gray-200';
   }
 
 }

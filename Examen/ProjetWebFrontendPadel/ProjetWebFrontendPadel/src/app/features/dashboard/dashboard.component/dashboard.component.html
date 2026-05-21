@@ -288,6 +288,158 @@
       </div>
     </div>
 
+    <!-- ===================== TOUS LES MATCHS DE LA SEMAINE ===================== -->
+    <div class="padel-card mb-6">
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <h2 class="text-base font-medium text-gray-900 flex items-center gap-2">
+          <mat-icon class="text-purple-500">list</mat-icon>
+          Tous les matchs de la semaine
+        </h2>
+
+        <!-- Filtre par site -->
+        <mat-form-field class="w-56" subscriptSizing="dynamic">
+          <mat-label>Filtrer par site</mat-label>
+          <mat-select [(ngModel)]="siteIdFiltre"
+                      (ngModelChange)="onSiteFiltreChange()">
+            <mat-option [value]="null">Tous les sites</mat-option>
+            @for (site of sites(); track site.id) {
+              <mat-option [value]="site.id">{{ site.nom }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+    <!-- Chargement -->
+    @if (matchsSemaineLoading()) {
+      <div class="flex justify-center py-8">
+        <mat-spinner diameter="32" />
+      </div>
+    }
+
+    <!-- État vide -->
+    @if (!matchsSemaineLoading() && matchsSemaine().length === 0) {
+      <p class="text-sm text-gray-500 text-center py-6">
+        Aucun match cette semaine
+        {{ siteIdFiltre ? 'sur ce site' : '' }}
+      </p>
+    }
+
+    <!-- Tableau des matchs -->
+    @if (!matchsSemaineLoading() && matchsSemaine().length > 0) {
+      <div class="overflow-x-auto -mx-4 sm:mx-0">
+        <table mat-table [dataSource]="matchsSemaine()" class="w-full">
+
+          <!-- Date / heure -->
+          <ng-container matColumnDef="dateHeure">
+            <th mat-header-cell *matHeaderCellDef
+                class="text-xs font-medium text-gray-500 uppercase">
+              Date & heure
+            </th>
+            <td mat-cell *matCellDef="let m">
+              <div class="font-medium text-gray-900 text-sm">
+                {{ m.dateHeure | date:'dd/MM/yyyy' }}
+              </div>
+              <div class="text-xs text-gray-500">
+                {{ m.dateHeure | date:'HH:mm' }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Site / Terrain -->
+          <ng-container matColumnDef="lieu">
+            <th mat-header-cell *matHeaderCellDef
+                class="text-xs font-medium text-gray-500 uppercase">
+              Lieu
+            </th>
+            <td mat-cell *matCellDef="let m">
+              <div class="font-medium text-gray-900 text-sm">{{ m.siteNom }}</div>
+              <div class="text-xs text-gray-500">{{ m.terrainNom }}</div>
+            </td>
+          </ng-container>
+
+          <!-- Organisateur -->
+          <ng-container matColumnDef="organisateur">
+            <th mat-header-cell *matHeaderCellDef
+                class="text-xs font-medium text-gray-500 uppercase">
+              Organisateur
+            </th>
+            <td mat-cell *matCellDef="let m">
+              <span class="text-sm text-gray-700">{{ m.organisateurNom }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Type -->
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef
+                class="text-xs font-medium text-gray-500 uppercase">
+              Type
+            </th>
+            <td mat-cell *matCellDef="let m">
+                <span [class]="typeBadgeClass(m.typeMatch)">
+                  {{ m.typeMatch === 'PRIVE' ? 'Privé' : 'Public' }}
+                </span>
+            </td>
+          </ng-container>
+
+          <!-- Joueurs -->
+          <ng-container matColumnDef="joueurs">
+            <th mat-header-cell *matHeaderCellDef
+                class="text-xs font-medium text-gray-500 uppercase">
+              Joueurs
+            </th>
+            <td mat-cell *matCellDef="let m">
+              <div class="flex items-center gap-1">
+                @for (i of [1,2,3,4]; track i) {
+                  <span [class]="joueurIconClass(m, i)">
+                      <mat-icon style="font-size:14px;width:14px;height:14px">
+                        person
+                      </mat-icon>
+                    </span>
+                }
+                <span class="text-xs text-gray-500 ml-1">
+                    {{ m.nombreJoueursConfirmes }}/4
+                  </span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Statut -->
+          <ng-container matColumnDef="statut">
+            <th mat-header-cell *matHeaderCellDef
+                class="text-xs font-medium text-gray-500 uppercase">
+              Statut
+            </th>
+            <td mat-cell *matCellDef="let m">
+                <span [class]="statutBadgeClass(m.statut)">
+                  {{ statutLabel(m.statut) }}
+                </span>
+            </td>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let m">
+              <button mat-icon-button
+                      matTooltip="Voir le détail"
+                      (click)="router.navigate(['/matchs', m.id])">
+                <mat-icon class="text-gray-500">visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="colonnesMatchs"
+              class="bg-gray-50 border-b border-gray-200"></tr>
+          <tr mat-row *matRowDef="let row; columns: colonnesMatchs;"
+              class="hover:bg-gray-50 border-b border-gray-100 last:border-0
+                       cursor-pointer"
+              (click)="router.navigate(['/matchs', row.id])">
+          </tr>
+        </table>
+      </div>
+    }
+  </div>
+
     <!-- Actions rapides -->
     <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
       <button mat-stroked-button

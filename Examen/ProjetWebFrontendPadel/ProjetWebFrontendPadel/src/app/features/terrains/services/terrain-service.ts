@@ -1,6 +1,6 @@
 import {inject, Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-import {Terrain, TerrainRequest} from '../models/terrain.model';
+import { CreneauDisponible, Terrain, TerrainRequest } from '../models/terrain.model';
 import {HttpClient, HttpParams} from '@angular/common/http';
 
 @Injectable({
@@ -25,6 +25,14 @@ export class TerrainService {
       .set('siteId', siteId)
       .set('dateHeure', dateHeure);
     return this.http.get<Terrain[]>(`${this.apiUrl}/disponibles`, { params });
+  }
+
+  findCreneauxDisponibles(terrainId: number, date: string): Observable<CreneauDisponible[]> {
+    const params = new HttpParams().set('date', date);
+    return this.http.get<CreneauDisponible[]>(
+      `${this.apiUrl}/${terrainId}/creneaux-disponibles`,
+      { params }
+    );
   }
 
   create(request: TerrainRequest): Observable<Terrain> {

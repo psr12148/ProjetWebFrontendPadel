@@ -18,7 +18,7 @@ import {
 import { MembreSearchResponse } from '../../../membres/models/membre.model';
 
 @Component({
-  selector: 'app-match-detail-component',
+  selector: 'app-match-detail.component',
   imports: [
     MatButtonModule,
     MatIconModule,
@@ -27,11 +27,10 @@ import { MembreSearchResponse } from '../../../membres/models/membre.model';
     MatTooltipModule,
     DatePipe,
   ],
-  templateUrl: './match-detail-component.html',
-  styleUrl: './match-detail-component.css',
+  templateUrl: './match-detail.component.html',
+  styleUrl: './match-detail.component.css',
 })
-export class MatchDetailComponent implements OnInit{
-
+export class MatchDetailComponent implements OnInit {
   @Input() id!: string;
 
   readonly router = inject(Router);

@@ -17,11 +17,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
 import { DatePipe } from '@angular/common';
 import { AuthService } from '../../../../core/services/auth-service';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 
 type VueMatch = 'mes-matchs' | 'publics' | 'terrain';
 
 @Component({
-  selector: 'app-match-list-component',
+  selector: 'app-match-list.component',
   imports: [
     FormsModule,
     MatTableModule,
@@ -33,13 +34,13 @@ type VueMatch = 'mes-matchs' | 'publics' | 'terrain';
     MatSelectModule,
     MatInputModule,
     MatChipsModule,
+    MatDatepickerModule,
     DatePipe,
   ],
-  templateUrl: './match-list-component.html',
-  styleUrl: './match-list-component.css',
+  templateUrl: './match-list.component.html',
+  styleUrl: './match-list.component.css',
 })
 export class MatchListComponent implements OnInit {
-
   readonly router = inject(Router);
   readonly authSvc = inject(AuthService);
   private route    = inject(ActivatedRoute);
@@ -55,7 +56,9 @@ export class MatchListComponent implements OnInit {
   // Filtres
   siteIdFiltre: number | null = null;
   terrainIdFiltre: number | null = null;
-  dateFiltre = new Date().toISOString().slice(0, 10);
+
+  // Le datepicker Material travaille avec un objet Date
+  dateFiltre = new Date();
 
   colonnes = ['dateHeure', 'lieu', 'type', 'joueurs', 'statut', 'actions'];
 
@@ -113,10 +116,11 @@ export class MatchListComponent implements OnInit {
    */
   private choisirObservable() {
     const membreId = this.authSvc.getMembreId();
+    const dateStr = this.formatDateIso(this.dateFiltre);
 
     // Vue "terrain" : matchs d'un terrain précis (via siteId + filtrage local)
     if (this.vue() === 'terrain' && this.siteIdFiltre) {
-      return this.matchSvc.findBySiteAndDate(this.siteIdFiltre, this.dateFiltre);
+      return this.matchSvc.findBySiteAndDate(this.siteIdFiltre, dateStr);
     }
 
     // Vue "publics disponibles"
@@ -126,7 +130,7 @@ export class MatchListComponent implements OnInit {
 
     // Vue "mes matchs" avec filtre site/date
     if (this.siteIdFiltre) {
-      return this.matchSvc.findBySiteAndDate(this.siteIdFiltre, this.dateFiltre);
+      return this.matchSvc.findBySiteAndDate(this.siteIdFiltre, dateStr);
     }
 
     // Vue "mes matchs" sans filtre → mes matchs uniquement
@@ -136,6 +140,17 @@ export class MatchListComponent implements OnInit {
 
     // Fallback (membre non connecté — ne devrait pas arriver)
     return this.matchSvc.findPublicsDisponibles();
+  }
+
+  /**
+   * Convertit une Date en "YYYY-MM-DD" en préservant l'heure locale
+   * (évite le décalage UTC de toISOString()).
+   */
+  private formatDateIso(date: Date): string {
+    const yyyy = date.getFullYear();
+    const mm   = String(date.getMonth() + 1).padStart(2, '0');
+    const dd   = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   }
 
   onNouveauMatch(): void {

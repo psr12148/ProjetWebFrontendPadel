@@ -27,6 +27,14 @@ export class MatchService {
     return this.http.get<Match[]>(`${this.apiUrl}/membre/${membreId}`);
   }
 
+  findAllForAdmin(date: string, siteId?: number | null): Observable<Match[]> {
+    let params = new HttpParams().set('date', date);
+    if (siteId !== null && siteId !== undefined) {
+      params = params.set('siteId', siteId);
+    }
+    return this.http.get<Match[]>(`${this.apiUrl}/admin/semaine`, { params });
+  }
+
   creerMatch(organisateurId: number, request: MatchRequest): Observable<Match> {
     return this.http.post<Match>(
       `${this.apiUrl}/organisateur/${organisateurId}`, request);

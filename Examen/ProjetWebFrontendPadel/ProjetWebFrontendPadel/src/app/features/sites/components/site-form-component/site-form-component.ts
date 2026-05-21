@@ -45,35 +45,33 @@ function horairesValidator(control: AbstractControl): ValidationErrors | null {
   styleUrl: './site-form-component.css',
 })
 export class SiteFormComponent implements OnInit{
-  // Reçu automatiquement depuis l'URL grâce à withComponentInputBinding()
-  @Input() siteId?: string;
+  @Input() id?: string;
 
-  readonly router = inject(Router);
-  private fb = inject(FormBuilder);
+  readonly router  = inject(Router);
+  private fb       = inject(FormBuilder);
   private siteService = inject(SiteService);
   private snackBar = inject(MatSnackBar);
 
-  submitting = signal(false);
-  isEditMode = signal(false);
+  submitting     = signal(false);
+  isEditMode     = signal(false);
   nombreCreneaux = signal(8);
 
   form = this.fb.group({
-    nom: ['', [Validators.required, Validators.maxLength(100)]],
-    adresse: ['', [Validators.required]],
-    nbTerrains: [1, [Validators.required, Validators.min(1), Validators.max(50)]],
+    nom:             ['', [Validators.required, Validators.maxLength(100)]],
+    adresse:         ['', [Validators.required]],
+    nbTerrains:      [1, [Validators.required, Validators.min(1), Validators.max(50)]],
     anneeApplicable: [new Date().getFullYear(), [Validators.required, Validators.min(2024)]],
     horaires: this.fb.group({
-      heureOuverture: ['08:00', [Validators.required]],
-      heureFermeture: ['22:00', [Validators.required]],
-    },
-    { validators: horairesValidator }
-    )
-  })
+        heureOuverture: ['08:00', [Validators.required]],
+        heureFermeture: ['22:00', [Validators.required]],
+      },
+      { validators: horairesValidator })
+  });
 
   ngOnInit(): void {
     // Recalcul temps réel des créneaux
     this.form.get('horaires')!.valueChanges.subscribe(v => {
-      if(!v.heureOuverture || !v.heureFermeture) {
+      if (!v.heureOuverture || !v.heureFermeture) {
         this.nombreCreneaux.set(0);
         return;
       }
@@ -86,26 +84,33 @@ export class SiteFormComponent implements OnInit{
     });
 
     // Mode édition : pré-remplissage du formulaire
-    if(this.siteId) {
+    if (this.id) {
       this.isEditMode.set(true);
-      this.siteService.findById(+this.siteId).subscribe(site => {
-        this.form.patchValue({
-          nom: site.nom,
-          adresse: site.adresse,
-          nbTerrains: site.nbTerrains,
-          anneeApplicable: site.anneeApplicable,
-          horaires: {
-            heureOuverture: site.heureOuverture,
-            heureFermeture: site.heureFermeture
-           },
-        });
+      this.siteService.findById(+this.id).subscribe({
+        next: (site) => {
+          this.form.patchValue({
+            nom:             site.nom,
+            adresse:         site.adresse,
+            nbTerrains:      site.nbTerrains,
+            anneeApplicable: site.anneeApplicable,
+            horaires: {
+              // Les heures arrivent du backend au format "HH:mm:ss" → on tronque à "HH:mm"
+              // car <input type="time"> n'accepte que ce format
+              heureOuverture: site.heureOuverture.substring(0, 5),
+              heureFermeture: site.heureFermeture.substring(0, 5),
+            },
+          });
+        },
+        error: () => {
+          this.snackBar.open('Site introuvable', 'Fermer', { duration: 3000 });
+          this.router.navigate(['/sites']);
+        },
       });
-
     }
   }
 
   onSubmit(): void {
-    if(this.form.invalid) {
+    if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
@@ -114,22 +119,22 @@ export class SiteFormComponent implements OnInit{
 
     const h = this.form.get('horaires')!.value;
     const request: SiteRequest = {
-      nom: this.form.value.nom!,
-      adresse: this.form.value.adresse!,
-      nbTerrains: this.form.value.nbTerrains!,
+      nom:             this.form.value.nom!,
+      adresse:         this.form.value.adresse!,
+      nbTerrains:      this.form.value.nbTerrains!,
       anneeApplicable: this.form.value.anneeApplicable!,
-      heureOuverture: h.heureOuverture!,
-      heureFermeture: h.heureFermeture!
+      heureOuverture:  h.heureOuverture!,
+      heureFermeture:  h.heureFermeture!
     };
 
     const action$ = this.isEditMode()
-      ? this.siteService.update(+this.siteId!, request)
+      ? this.siteService.update(+this.id!, request)
       : this.siteService.create(request);
 
     action$.subscribe({
       next: () => {
         const msg = this.isEditMode() ? 'Site mis à jour' : 'Site créé avec succès';
-        this.snackBar.open(msg, 'Fermer', {duration: 3000});
+        this.snackBar.open(msg, 'Fermer', { duration: 3000 });
         this.router.navigate(['/sites']);
       },
       error: (err) => {

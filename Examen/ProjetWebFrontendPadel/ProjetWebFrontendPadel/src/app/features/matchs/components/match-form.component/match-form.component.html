@@ -8,7 +8,7 @@
     <div>
       <h1 class="page-title">Créer un match</h1>
       <p class="text-sm text-gray-500 mt-0.5">
-        Réservez un terrain et choisissez le type de match
+        Réservez un terrain et choisissez un créneau disponible
       </p>
     </div>
   </div>
@@ -59,20 +59,67 @@
 
     <mat-divider class="my-6" />
 
-    <!-- Date et heure -->
+    <!-- Date et créneau -->
     <h2 class="text-base font-medium text-gray-900 mb-4">
-      Date et heure
+      Date et créneau
     </h2>
 
-    <mat-form-field class="w-full mb-6">
-      <mat-label>Date et heure du match</mat-label>
-      <input matInput type="datetime-local" formControlName="dateHeure">
-      @if (form.get('dateHeure')?.hasError('required')
-      && form.get('dateHeure')?.touched) {
-        <mat-error>La date est obligatoire</mat-error>
-      }
-      <mat-hint>Durée : 1h30. Vérifiez les horaires du site.</mat-hint>
-    </mat-form-field>
+    <div class="flex flex-col sm:flex-row gap-4 mb-6">
+
+      <!-- Datepicker Material -->
+      <mat-form-field class="w-full sm:w-64">
+        <mat-label>Date du match</mat-label>
+        <input matInput
+               [matDatepicker]="picker"
+               formControlName="date"
+               [min]="dateMin"
+               (dateChange)="onDateChange()"
+               readonly>
+        <mat-datepicker-toggle matIconSuffix [for]="picker" />
+        <mat-datepicker #picker />
+        @if (form.get('date')?.hasError('required')
+        && form.get('date')?.touched) {
+          <mat-error>La date est obligatoire</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Sélecteur de créneau -->
+      <mat-form-field class="w-full flex-1">
+        <mat-label>Créneau</mat-label>
+        <mat-select formControlName="heureDebut">
+          @if (creneauxLoading()) {
+            <mat-option disabled>
+              <span class="text-gray-400">Chargement des créneaux...</span>
+            </mat-option>
+          }
+          @if (!creneauxLoading() && creneaux().length === 0
+          && form.get('terrainId')?.value
+          && form.get('date')?.value) {
+            <mat-option disabled>
+              <span class="text-gray-400">Aucun créneau pour cette date</span>
+            </mat-option>
+          }
+          @for (c of creneaux(); track c.heureDebut) {
+            <mat-option [value]="c.heureDebut" [disabled]="!c.disponible">
+              <span [class]="c.disponible ? '' : 'text-gray-400 line-through'">
+                {{ formatHeure(c.heureDebut) }} – {{ formatHeure(c.heureFin) }}
+              </span>
+              @if (!c.disponible) {
+                <span class="text-xs text-red-500 ml-2">(occupé)</span>
+              }
+            </mat-option>
+          }
+        </mat-select>
+        @if (form.get('heureDebut')?.hasError('required')
+        && form.get('heureDebut')?.touched) {
+          <mat-error>Sélectionnez un créneau</mat-error>
+        }
+        @if (!form.get('terrainId')?.value || !form.get('date')?.value) {
+          <mat-hint>Choisissez d'abord un terrain et une date</mat-hint>
+        }
+      </mat-form-field>
+
+    </div>
 
     <mat-divider class="my-6" />
 

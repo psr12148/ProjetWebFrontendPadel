@@ -12,3 +12,9 @@ export interface TerrainRequest {
   numero: number;
   nom?: string;
 }
+
+export interface CreneauDisponible {
+  heureDebut: string;   // "08:00:00"
+  heureFin: string;     // "09:30:00"
+  disponible: boolean;
+}

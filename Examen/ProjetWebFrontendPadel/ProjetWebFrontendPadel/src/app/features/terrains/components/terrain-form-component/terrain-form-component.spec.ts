@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TerrainFormComponent } from './terrain-form-component';
+import { provideRouter } from '@angular/router';
 
 describe('TerrainFormComponent', () => {
   let component: TerrainFormComponent;
@@ -9,6 +10,9 @@ describe('TerrainFormComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TerrainFormComponent],
+      providers: [
+        provideRouter([]),
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(TerrainFormComponent);

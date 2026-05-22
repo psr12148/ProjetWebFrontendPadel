@@ -117,6 +117,76 @@
 
     <mat-divider class="my-6" />
 
+    <!-- Jours de fermeture -->
+    <h2 class="text-base font-medium text-gray-900 mb-1">
+      Jours de fermeture
+    </h2>
+    <p class="text-sm text-gray-500 mb-4">
+      Ajoutez les jours où le site est fermé (jours fériés, congés, etc.).
+      Aucune réservation ne sera possible ces jours-là.
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-4">
+      <mat-form-field class="w-full sm:w-44" subscriptSizing="dynamic">
+        <mat-label>Date</mat-label>
+        <input matInput
+               [matDatepicker]="fermeturePicker"
+               [(ngModel)]="nouvelleDate"
+               [ngModelOptions]="{ standalone: true }"
+               readonly>
+        <mat-datepicker-toggle matIconSuffix [for]="fermeturePicker" />
+        <mat-datepicker #fermeturePicker />
+      </mat-form-field>
+
+      <mat-form-field class="w-full flex-1" subscriptSizing="dynamic">
+        <mat-label>Motif (optionnel)</mat-label>
+        <input matInput
+               [(ngModel)]="nouveauMotif"
+               [ngModelOptions]="{ standalone: true }"
+               placeholder="Ex : Noël, congés annuels..."
+               maxlength="255">
+      </mat-form-field>
+
+      <button mat-stroked-button color="primary" type="button"
+              class="whitespace-nowrap"
+              (click)="ajouterJourFermeture()">
+        <mat-icon>add</mat-icon>
+        Ajouter
+      </button>
+    </div>
+
+    @if (joursFermeture().length === 0) {
+      <p class="text-sm text-gray-400 italic">
+        Aucun jour de fermeture défini.
+      </p>
+    } @else {
+      <div class="flex flex-col gap-2">
+        @for (jour of joursFermeture(); track jour.date.getTime(); let i = $index) {
+          <div class="flex items-center justify-between p-3 rounded-lg
+                      border border-gray-200 bg-gray-50">
+            <div class="flex items-center gap-3">
+              <mat-icon class="text-red-400">event_busy</mat-icon>
+              <div>
+                <p class="text-sm font-medium text-gray-900">
+                  {{ jour.date | date:'EEEE dd MMMM yyyy' }}
+                </p>
+                @if (jour.motif) {
+                  <p class="text-xs text-gray-500">{{ jour.motif }}</p>
+                }
+              </div>
+            </div>
+            <button mat-icon-button color="warn" type="button"
+                    (click)="retirerJourFermeture(i)"
+                    matTooltip="Retirer">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <mat-divider class="my-6" />
+
     <!-- Actions -->
     <div class="flex items-center justify-end gap-3">
       <button mat-button type="button"

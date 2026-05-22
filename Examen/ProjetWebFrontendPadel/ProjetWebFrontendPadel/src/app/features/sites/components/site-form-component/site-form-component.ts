@@ -1,15 +1,18 @@
 import {Component, inject, Input, OnInit, signal} from '@angular/core';
-import {AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators} from '@angular/forms';
+import {AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, ValidationErrors, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {SiteService} from '../../services/site-service';
-import {MatSnackBar} from '@angular/material/snack-bar';
-import {SiteRequest} from '../../models/site.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { JourFermetureRequest, SiteRequest } from '../../models/site.model';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatDividerModule} from '@angular/material/divider';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { DatePipe } from '@angular/common';
 
 // Validator : heure fermeture > ouverture ET plage >= 105 min
 function horairesValidator(control: AbstractControl): ValidationErrors | null {
@@ -30,6 +33,11 @@ function horairesValidator(control: AbstractControl): ValidationErrors | null {
   return null;
 }
 
+interface JourFermetureForm {
+  date: Date;
+  motif: string;
+}
+
 @Component({
   selector: 'app-site-form-component',
   imports: [
@@ -39,38 +47,49 @@ function horairesValidator(control: AbstractControl): ValidationErrors | null {
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatDividerModule
+    MatDividerModule,
+    MatDatepickerModule,
+    MatTooltipModule,
+    DatePipe,
+    FormsModule,
   ],
   templateUrl: './site-form-component.html',
   styleUrl: './site-form-component.css',
 })
-export class SiteFormComponent implements OnInit{
+export class SiteFormComponent implements OnInit {
   @Input() id?: string;
 
-  readonly router  = inject(Router);
-  private fb       = inject(FormBuilder);
+  readonly router = inject(Router);
+  private fb = inject(FormBuilder);
   private siteService = inject(SiteService);
   private snackBar = inject(MatSnackBar);
 
-  submitting     = signal(false);
-  isEditMode     = signal(false);
+  submitting = signal(false);
+  isEditMode = signal(false);
   nombreCreneaux = signal(8);
 
+  // --- Jours de fermeture ---
+  joursFermeture = signal<JourFermetureForm[]>([]);
+  nouvelleDate: Date | null = null;
+  nouveauMotif = '';
+
   form = this.fb.group({
-    nom:             ['', [Validators.required, Validators.maxLength(100)]],
-    adresse:         ['', [Validators.required]],
-    nbTerrains:      [1, [Validators.required, Validators.min(1), Validators.max(50)]],
+    nom: ['', [Validators.required, Validators.maxLength(100)]],
+    adresse: ['', [Validators.required]],
+    nbTerrains: [1, [Validators.required, Validators.min(1), Validators.max(50)]],
     anneeApplicable: [new Date().getFullYear(), [Validators.required, Validators.min(2024)]],
-    horaires: this.fb.group({
+    horaires: this.fb.group(
+      {
         heureOuverture: ['08:00', [Validators.required]],
         heureFermeture: ['22:00', [Validators.required]],
       },
-      { validators: horairesValidator })
+      { validators: horairesValidator },
+    ),
   });
 
   ngOnInit(): void {
     // Recalcul temps réel des créneaux
-    this.form.get('horaires')!.valueChanges.subscribe(v => {
+    this.form.get('horaires')!.valueChanges.subscribe((v) => {
       if (!v.heureOuverture || !v.heureFermeture) {
         this.nombreCreneaux.set(0);
         return;
@@ -89,9 +108,9 @@ export class SiteFormComponent implements OnInit{
       this.siteService.findById(+this.id).subscribe({
         next: (site) => {
           this.form.patchValue({
-            nom:             site.nom,
-            adresse:         site.adresse,
-            nbTerrains:      site.nbTerrains,
+            nom: site.nom,
+            adresse: site.adresse,
+            nbTerrains: site.nbTerrains,
             anneeApplicable: site.anneeApplicable,
             horaires: {
               // Les heures arrivent du backend au format "HH:mm:ss" → on tronque à "HH:mm"
@@ -100,6 +119,13 @@ export class SiteFormComponent implements OnInit{
               heureFermeture: site.heureFermeture.substring(0, 5),
             },
           });
+
+          // Charge les jours de fermeture existants
+          const jours = (site.joursFermeture ?? []).map((j) => ({
+            date: new Date(j.date),
+            motif: j.motif ?? '',
+          }));
+          this.joursFermeture.set(jours);
         },
         error: () => {
           this.snackBar.open('Site introuvable', 'Fermer', { duration: 3000 });
@@ -107,6 +133,45 @@ export class SiteFormComponent implements OnInit{
         },
       });
     }
+  }
+
+  // --- Gestion des jours de fermeture ---
+
+  ajouterJourFermeture(): void {
+    if (!this.nouvelleDate) {
+      this.snackBar.open('Choisissez une date', 'Fermer', { duration: 2500 });
+      return;
+    }
+
+    // Évite les doublons de date
+    const dejaPresent = this.joursFermeture().some(
+      (j) => j.date.toDateString() === this.nouvelleDate!.toDateString(),
+    );
+    if (dejaPresent) {
+      this.snackBar.open('Cette date est déjà dans la liste', 'Fermer', { duration: 2500 });
+      return;
+    }
+
+    this.joursFermeture.update((jours) => [
+      ...jours,
+      { date: this.nouvelleDate!, motif: this.nouveauMotif.trim() },
+    ]);
+
+    // Réinitialise les champs de saisie
+    this.nouvelleDate = null;
+    this.nouveauMotif = '';
+  }
+
+  retirerJourFermeture(index: number): void {
+    this.joursFermeture.update((jours) => jours.filter((_, i) => i !== index));
+  }
+
+  /** Convertit Date → "YYYY-MM-DD" (heure locale, pas UTC) */
+  private formatDateIso(date: Date): string {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   }
 
   onSubmit(): void {
@@ -118,13 +183,21 @@ export class SiteFormComponent implements OnInit{
     this.submitting.set(true);
 
     const h = this.form.get('horaires')!.value;
+
+    // Transforme les jours de fermeture du formulaire en requêtes backend
+    const joursRequest: JourFermetureRequest[] = this.joursFermeture().map((j) => ({
+      date: this.formatDateIso(j.date),
+      motif: j.motif || null,
+    }));
+
     const request: SiteRequest = {
-      nom:             this.form.value.nom!,
-      adresse:         this.form.value.adresse!,
-      nbTerrains:      this.form.value.nbTerrains!,
+      nom: this.form.value.nom!,
+      adresse: this.form.value.adresse!,
+      nbTerrains: this.form.value.nbTerrains!,
       anneeApplicable: this.form.value.anneeApplicable!,
-      heureOuverture:  h.heureOuverture!,
-      heureFermeture:  h.heureFermeture!
+      heureOuverture: h.heureOuverture!,
+      heureFermeture: h.heureFermeture!,
+      joursFermeture: joursRequest,
     };
 
     const action$ = this.isEditMode()
@@ -142,9 +215,9 @@ export class SiteFormComponent implements OnInit{
         const msg = err.error?.message ?? 'Une erreur est survenue';
         this.snackBar.open(msg, 'Fermer', {
           duration: 5000,
-          panelClass: ['error-snackbar']
+          panelClass: ['error-snackbar'],
         });
-      }
+      },
     });
   }
 }

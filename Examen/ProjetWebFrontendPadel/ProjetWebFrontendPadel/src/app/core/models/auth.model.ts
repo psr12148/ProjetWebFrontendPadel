@@ -14,3 +14,10 @@ export interface AuthResponse {
   typeLabel: string;
   admin: boolean;
 }
+
+export interface RegisterRequest {
+  nom: string;
+  prenom: string;
+  email: string;
+  motDePasse: string;
+}

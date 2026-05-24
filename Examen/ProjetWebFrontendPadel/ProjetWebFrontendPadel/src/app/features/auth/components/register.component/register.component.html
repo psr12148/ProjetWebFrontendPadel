@@ -1,4 +1,4 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+<div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
   <div class="w-full max-w-sm">
 
     <!-- Logo -->
@@ -10,8 +10,10 @@
           sports_tennis
         </mat-icon>
       </div>
-      <h1 class="text-2xl font-bold text-gray-900">Padel Manager</h1>
-      <p class="text-sm text-gray-500 mt-1">Connectez-vous à votre espace</p>
+      <h1 class="text-2xl font-bold text-gray-900">Créer un compte</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        Inscrivez-vous pour réserver vos matchs
+      </p>
     </div>
 
     <!-- Formulaire -->
@@ -19,6 +21,24 @@
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
 
         <div class="flex flex-col gap-4">
+
+          <mat-form-field class="w-full">
+            <mat-label>Prénom</mat-label>
+            <input matInput formControlName="prenom" autocomplete="given-name">
+            @if (form.get('prenom')?.hasError('required')
+            && form.get('prenom')?.touched) {
+              <mat-error>Le prénom est obligatoire</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field class="w-full">
+            <mat-label>Nom</mat-label>
+            <input matInput formControlName="nom" autocomplete="family-name">
+            @if (form.get('nom')?.hasError('required')
+            && form.get('nom')?.touched) {
+              <mat-error>Le nom est obligatoire</mat-error>
+            }
+          </mat-form-field>
 
           <mat-form-field class="w-full">
             <mat-label>Email</mat-label>
@@ -38,7 +58,7 @@
             <mat-label>Mot de passe</mat-label>
             <input matInput [type]="showPassword() ? 'text' : 'password'"
                    formControlName="motDePasse"
-                   autocomplete="current-password">
+                   autocomplete="new-password">
             <button mat-icon-button matSuffix type="button"
                     (click)="showPassword.set(!showPassword())">
               <mat-icon class="text-gray-400">
@@ -49,16 +69,40 @@
             && form.get('motDePasse')?.touched) {
               <mat-error>Le mot de passe est obligatoire</mat-error>
             }
+            @if (form.get('motDePasse')?.hasError('minlength')) {
+              <mat-error>Minimum 8 caractères</mat-error>
+            }
           </mat-form-field>
+
+          <mat-form-field class="w-full">
+            <mat-label>Confirmer le mot de passe</mat-label>
+            <input matInput [type]="showPassword() ? 'text' : 'password'"
+                   formControlName="confirmation"
+                   autocomplete="new-password">
+            @if (form.get('confirmation')?.hasError('required')
+            && form.get('confirmation')?.touched) {
+              <mat-error>Veuillez confirmer le mot de passe</mat-error>
+            }
+          </mat-form-field>
+
+          <!-- Erreur : mots de passe différents -->
+          @if (form.hasError('motsDePasseDifferents')
+          && form.get('confirmation')?.touched) {
+            <div class="p-2 rounded-lg bg-amber-50 border border-amber-200">
+              <span class="text-sm text-amber-700">
+                Les mots de passe ne correspondent pas
+              </span>
+            </div>
+          }
 
         </div>
 
-        <!-- Erreur login -->
-        @if (loginError()) {
+        <!-- Erreur inscription (backend) -->
+        @if (registerError()) {
           <div class="mt-3 p-3 rounded-lg bg-red-50 border border-red-200
                           flex items-center gap-2">
             <mat-icon class="text-red-500 text-sm">error_outline</mat-icon>
-            <span class="text-sm text-red-700">{{ loginError() }}</span>
+            <span class="text-sm text-red-700">{{ registerError() }}</span>
           </div>
         }
 
@@ -68,44 +112,28 @@
           @if (loading()) {
             <mat-spinner diameter="20" class="mr-2" />
           }
-          Se connecter
+          S'inscrire
         </button>
 
       </form>
     </div>
 
-    <!-- Lien vers inscription -->
+    <!-- Lien vers connexion -->
     <p class="text-center text-sm text-gray-500 mt-4">
-      Pas encore de compte ?
-      <a routerLink="/auth/register"
+      Déjà un compte ?
+      <a routerLink="/auth/login"
          class="text-green-600 font-medium hover:underline">
-        S'inscrire
+        Se connecter
       </a>
     </p>
 
-    <!-- Info types -->
+    <!-- Info inscription -->
     <div class="mt-4 p-3 rounded-lg bg-white border border-gray-200">
-      <p class="text-xs text-gray-500 text-center mb-2">Types de membres</p>
-      <div class="flex justify-around text-center">
-        <div>
-          <code class="text-xs bg-purple-100 text-purple-700 px-1 rounded">
-            Gxxxx
-          </code>
-          <p class="text-xs text-gray-400 mt-0.5">Global — 3 sem.</p>
-        </div>
-        <div>
-          <code class="text-xs bg-blue-100 text-blue-700 px-1 rounded">
-            Sxxxxx
-          </code>
-          <p class="text-xs text-gray-400 mt-0.5">Site — 2 sem.</p>
-        </div>
-        <div>
-          <code class="text-xs bg-orange-100 text-orange-700 px-1 rounded">
-            Lxxxxx
-          </code>
-          <p class="text-xs text-gray-400 mt-0.5">Libre — 5 j.</p>
-        </div>
-      </div>
+      <p class="text-xs text-gray-500 text-center">
+        L'inscription crée un compte <strong>Membre Libre</strong>
+        (réservation jusqu'à 5 jours à l'avance).
+        Contactez le club pour un statut Global ou Site.
+      </p>
     </div>
 
   </div>

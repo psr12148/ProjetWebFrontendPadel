@@ -1,6 +1,6 @@
 import { inject, Injectable, signal} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import { AuthResponse, LoginRequest } from '../models/auth.model';
+import { AuthResponse, LoginRequest, RegisterRequest } from '../models/auth.model';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 
@@ -26,15 +26,33 @@ export class AuthService {
 
   login(request: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request).pipe(
-      tap(response => {
-        localStorage.setItem(this.TOKEN_KEY, response.token);
-        localStorage.setItem(this.USER_KEY, JSON.stringify(response));
-        this.currentUser.set(response);
-        this.isLoggedIn.set(true);
-        this.isAdmin.set(response.admin);
-      }),
+      tap(response => this.stockerSession(response)),
     );
   }
+
+  /**
+   * Auto-inscription d'un nouveau membre LIBRE.
+   * Le backend renvoie directement un token → l'utilisateur est connecté
+   * immédiatement après l'inscription (même traitement que login).
+   */
+  register(request: RegisterRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request).pipe(
+      tap(response => this.stockerSession(response)),
+    );
+  }
+
+  /**
+   * Stocke la session (token + user) et met à jour les signals.
+   * Factorisé car login() et register() font exactement la même chose.
+   */
+  private stockerSession(response: AuthResponse): void {
+    localStorage.setItem(this.TOKEN_KEY, response.token);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(response));
+    this.currentUser.set(response);
+    this.isLoggedIn.set(true);
+    this.isAdmin.set(response.admin);
+  }
+
 
   /**
    * Déconnexion locale (vide le storage et redirige vers login).

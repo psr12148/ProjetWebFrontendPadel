@@ -23,7 +23,7 @@ export interface MembreRequest {
   nom: string;
   prenom: string;
   email: string;
-  motDePasse: string;
+  motDePasse?: string;
 }
 
 export interface MembreSearchResponse {

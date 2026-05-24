@@ -142,6 +142,8 @@ export class MembreFormComponent implements OnInit{
     this.submitting.set(true);
 
     const v = this.form.value;
+
+
     const request: MembreRequest = {
       prenom:     v.prenom!,
       nom:        v.nom!,
@@ -149,8 +151,12 @@ export class MembreFormComponent implements OnInit{
       typeMembre: v.typeMembre!,
       matricule:  v.matricule!,
       siteId:     v.siteId ?? undefined,
-      motDePasse: v.motDePasse!,
     };
+
+    const mdp = v.motDePasse?.trim();
+    if (mdp && mdp.length > 0) {
+      request.motDePasse = mdp;
+    }
 
     const action$ = this.isEditMode()
       ? this.membreSvc.update(+this.id!, request)

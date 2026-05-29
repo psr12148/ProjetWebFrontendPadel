@@ -9,6 +9,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import {
+  SituationBannerComponent
+} from '../../shared/components/situation-banner.component/situation-banner.component';
 
 @Component({
   selector: 'app-shell.component',
@@ -23,6 +26,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatButtonModule,
     MatDividerModule,
     MatTooltipModule,
+    SituationBannerComponent
   ],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.css',

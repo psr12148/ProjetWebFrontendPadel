@@ -1,0 +1,36 @@
+<!-- Bannière pénalité (rouge) -->
+@if (penaliteActive()) {
+  <div class="flex items-center gap-3 px-4 py-3 bg-red-50 border-b border-red-200">
+    <mat-icon class="text-red-500">block</mat-icon>
+    <div class="text-sm text-red-800">
+      <span class="font-semibold">Réservations suspendues</span>
+      jusqu'au {{ penaliteJusquA() | date:'dd/MM/yyyy' }}.
+      Vous ne pouvez pas créer ou rejoindre de match pour le moment.
+    </div>
+  </div>
+}
+
+<!-- Bannière solde (orange) — indépendante de la pénalité -->
+@if (aSolde()) {
+  <div class="flex items-center gap-3 px-4 py-3 bg-orange-50 border-b border-orange-200">
+    <mat-icon class="text-orange-500">euro</mat-icon>
+    <div class="flex-1 text-sm text-orange-800">
+          <span class="font-semibold">Solde impayé de
+            {{ solde() | number:'1.2-2' }}€.</span>
+      @if (penaliteActive()) {
+        Vous pouvez le régler dès maintenant pour être libre dès la fin de la pénalité.
+      } @else {
+        Réglez-le pour pouvoir réserver à nouveau.
+      }
+    </div>
+    <button mat-flat-button color="warn"
+            [disabled]="paiementEnCours()"
+            (click)="onPayerSolde()">
+      @if (paiementEnCours()) {
+        <mat-spinner diameter="18" class="mr-2" />
+      }
+      Payer mon solde
+    </button>
+  </div>
+}
+

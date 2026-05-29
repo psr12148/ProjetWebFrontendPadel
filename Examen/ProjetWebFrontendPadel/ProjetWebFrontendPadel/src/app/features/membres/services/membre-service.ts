@@ -46,4 +46,15 @@ export class MembreService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+  /**
+   * Règle le solde impayé du membre (paiement direct).
+   * Retourne le montant réglé.
+   */
+  payerSolde(membreId: number): Observable<{ message: string; montantRegle: number }> {
+    return this.http.post<{ message: string; montantRegle: number }>(
+      `${this.apiUrl}/${membreId}/payer-solde`,
+      {}
+    );
+  }
+
 }

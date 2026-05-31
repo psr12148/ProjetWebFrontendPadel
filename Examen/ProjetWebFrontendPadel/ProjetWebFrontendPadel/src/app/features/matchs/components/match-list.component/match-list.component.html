@@ -15,6 +15,21 @@
     </button>
   </div>
 
+  <!-- Bandeau "filtre actif" quand on vient du dashboard -->
+  @if (vue() === 'dashboard-filtre' && libelleFiltreActif) {
+    <div class="mb-4 px-4 py-3 rounded-lg bg-blue-50 border border-blue-200
+                flex items-center justify-between">
+      <div class="flex items-center gap-2 text-sm text-blue-800">
+        <mat-icon class="text-blue-600">filter_alt</mat-icon>
+        <span>Filtre actif : <strong>{{ libelleFiltreActif }}</strong></span>
+      </div>
+      <button mat-button color="primary" (click)="effacerFiltresDashboard()">
+        <mat-icon>close</mat-icon>
+        Retirer le filtre
+      </button>
+    </div>
+  }
+
   <!-- Filtres -->
   <div class="padel-card mb-6 flex flex-wrap gap-4 items-end">
 

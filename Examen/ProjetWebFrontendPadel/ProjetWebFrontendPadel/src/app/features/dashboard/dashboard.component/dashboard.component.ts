@@ -106,6 +106,18 @@ export class DashboardComponent implements OnInit {
   }
 
 
+  // --- Navigation depuis les catégories cliquables ---
+  naviguerVersMatchs(filtre: { statut?: StatutMatch; type?: TypeMatch }): void {
+    const queryParams: Record<string, string> = {
+      semaine: this.formatDateIso(this.debutSemaine()),
+    };
+    if (filtre.statut) queryParams['statut'] = filtre.statut;
+    if (filtre.type)   queryParams['type']   = filtre.type;
+
+    this.router.navigate(['/matchs'], { queryParams });
+  }
+
+
   // --- Navigation entre semaines ---
 
   semainePrecedente(): void {

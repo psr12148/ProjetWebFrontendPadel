@@ -19,7 +19,7 @@ import { DatePipe } from '@angular/common';
 import { AuthService } from '../../../../core/services/auth-service';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 
-type VueMatch = 'mes-matchs' | 'publics' | 'terrain';
+type VueMatch = 'mes-matchs' | 'publics' | 'terrain' | 'dashboard-filtre';
 
 @Component({
   selector: 'app-match-list.component',
@@ -57,24 +57,57 @@ export class MatchListComponent implements OnInit {
   siteIdFiltre: number | null = null;
   terrainIdFiltre: number | null = null;
 
+  // Filtres venant du dashboard (query params)
+  statutFiltre:  StatutMatch | null = null;
+  typeFiltre:    TypeMatch   | null = null;
+  semaineFiltre: string | null = null;   // "YYYY-MM-DD" (lundi de la semaine)
+
   // Le datepicker Material travaille avec un objet Date
   dateFiltre = new Date();
 
   colonnes = ['dateHeure', 'lieu', 'type', 'joueurs', 'statut', 'actions'];
 
+  /** Libellé affiché au-dessus de la liste quand on vient du dashboard */
+  get libelleFiltreActif(): string | null {
+    if (this.vue() !== 'dashboard-filtre') return null;
+    const parts: string[] = [];
+    if (this.typeFiltre)   parts.push(this.typeFiltre === 'PRIVE' ? 'Privés' : 'Publics');
+    if (this.statutFiltre) parts.push(this.statutLabel(this.statutFiltre).toLowerCase());
+    return 'Matchs ' + parts.join(' — ');
+  }
+
   ngOnInit(): void {
     this.siteSvc.findAll().subscribe(s => this.sites.set(s));
 
-    // Vérifie les queryParams pour pré-sélectionner un terrain (workflow)
-    const terrainId = this.route.snapshot.queryParams['terrainId'];
-    const siteId    = this.route.snapshot.queryParams['siteId'];
+    const qp = this.route.snapshot.queryParams;
+
+    // --- Cas 1 : pré-sélection terrain (workflow existant) ---
+    const terrainId = qp['terrainId'];
+    const siteId    = qp['siteId'];
 
     if (terrainId) {
       this.terrainIdFiltre = +terrainId;
       this.siteIdFiltre    = siteId ? +siteId : null;
-      this.vue.set('terrain');  // vue spéciale "matchs d'un terrain"
+      this.vue.set('terrain');
+      this.load();
+      return;
     }
 
+    // --- Cas 2 : pré-filtre depuis le dashboard (statut / type / semaine) ---
+    const statut  = qp['statut']  as StatutMatch | undefined;
+    const type    = qp['type']    as TypeMatch   | undefined;
+    const semaine = qp['semaine'] as string | undefined;
+
+    if (statut || type || semaine) {
+      this.statutFiltre  = statut  ?? null;
+      this.typeFiltre    = type    ?? null;
+      this.semaineFiltre = semaine ?? this.formatDateIso(new Date());
+      this.vue.set('dashboard-filtre');
+      this.load();
+      return;
+    }
+
+    // --- Cas 3 : vue par défaut ---
     this.load();
   }
 
@@ -84,6 +117,25 @@ export class MatchListComponent implements OnInit {
     if (vue !== 'terrain') {
       this.terrainIdFiltre = null;
     }
+    // Quitter la vue dashboard-filtre supprime les filtres associés
+    if (vue !== 'dashboard-filtre') {
+      this.statutFiltre  = null;
+      this.typeFiltre    = null;
+      this.semaineFiltre = null;
+    }
+    this.load();
+  }
+
+  /**
+   * Retire les filtres actifs venant du dashboard et revient à la vue par défaut.
+   */
+  effacerFiltresDashboard(): void {
+    this.statutFiltre  = null;
+    this.typeFiltre    = null;
+    this.semaineFiltre = null;
+    // Nettoie aussi l'URL pour ne pas re-déclencher au prochain rechargement
+    this.router.navigate(['/matchs'], { replaceUrl: true });
+    this.vue.set('mes-matchs');
     this.load();
   }
 
@@ -98,12 +150,21 @@ export class MatchListComponent implements OnInit {
 
     obs$.subscribe({
       next: (matches) => {
-        // Filtrage côté client par terrainId si nécessaire
-        // (le backend n'a pas d'endpoint findByTerrain dédié, mais
-        // la propriété terrainId est présente dans Match)
-        const filtres = this.terrainIdFiltre
-          ? matches.filter(m => m.terrainId === this.terrainIdFiltre)
-          : matches;
+        let filtres = matches;
+
+        // Filtrage local par terrainId (workflow "vue terrain")
+        if (this.terrainIdFiltre) {
+          filtres = filtres.filter(m => m.terrainId === this.terrainIdFiltre);
+        }
+
+        // Filtrage local par statut / type (vue dashboard-filtre)
+        if (this.statutFiltre) {
+          filtres = filtres.filter(m => m.statut === this.statutFiltre);
+        }
+        if (this.typeFiltre) {
+          filtres = filtres.filter(m => m.typeMatch === this.typeFiltre);
+        }
+
         this.matches.set(filtres);
         this.loading.set(false);
       },
@@ -112,13 +173,20 @@ export class MatchListComponent implements OnInit {
   }
 
   /**
-   * Choisit l'endpoint backend selon la vue active et les filtres.
+   * Choisit l'endpoint backend selon la vue active.
    */
   private choisirObservable() {
     const membreId = this.authSvc.getMembreId();
-    const dateStr = this.formatDateIso(this.dateFiltre);
+    const dateStr  = this.formatDateIso(this.dateFiltre);
 
-    // Vue "terrain" : matchs d'un terrain précis (via siteId + filtrage local)
+    // Vue "dashboard-filtre" : on récupère TOUS les matchs de la semaine
+    // (endpoint admin), puis on filtre localement par statut/type.
+    if (this.vue() === 'dashboard-filtre') {
+      const dateRef = this.semaineFiltre ?? dateStr;
+      return this.matchSvc.findAllForAdmin(dateRef, null);
+    }
+
+    // Vue "terrain" : matchs d'un terrain précis (filtrage local sur terrainId)
     if (this.vue() === 'terrain' && this.siteIdFiltre) {
       return this.matchSvc.findBySiteAndDate(this.siteIdFiltre, dateStr);
     }
@@ -138,7 +206,6 @@ export class MatchListComponent implements OnInit {
       return this.matchSvc.findByMembre(membreId);
     }
 
-    // Fallback (membre non connecté — ne devrait pas arriver)
     return this.matchSvc.findPublicsDisponibles();
   }
 

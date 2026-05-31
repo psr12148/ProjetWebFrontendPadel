@@ -107,25 +107,21 @@
         }
       </div>
 
+      <!-- Matchs cette semaine -->
       <div class="padel-card text-center cursor-pointer hover:shadow-md transition-shadow"
            (click)="router.navigate(['/matchs'])">
         <p class="text-3xl font-bold text-purple-600">
-          {{ stats()!.totalMatchsAujourdhui }}
+          {{ stats()!.totalMatchsSemaine }}
         </p>
-        <p class="text-sm text-gray-500 mt-1">Matchs aujourd'hui</p>
-        <p class="text-xs text-gray-400">
-          {{ stats()!.totalMatchsSemaine }} cette semaine
-        </p>
+        <p class="text-sm text-gray-500 mt-1">Matchs cette semaine</p>
       </div>
 
+      <!-- CA cette semaine -->
       <div class="padel-card text-center">
         <p class="text-3xl font-bold text-amber-600">
-          {{ stats()!.chiffreAffairesJour | number:'1.2-2' }}€
+          {{ stats()!.chiffreAffairesSemaine | number:'1.2-2' }}€
         </p>
-        <p class="text-sm text-gray-500 mt-1">CA aujourd'hui</p>
-        <p class="text-xs text-gray-400">
-          {{ stats()!.chiffreAffairesSemaine | number:'1.2-2' }}€ cette semaine
-        </p>
+        <p class="text-sm text-gray-500 mt-1">CA cette semaine</p>
       </div>
 
     </div>
@@ -133,63 +129,81 @@
     <!-- ===================== LIGNE 2 : MATCHS + PAIEMENTS ===================== -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
-      <!-- Statut des matchs -->
+      <!-- Statut des matchs (lignes cliquables) -->
       <div class="padel-card">
         <h2 class="text-base font-medium text-gray-900 mb-4 flex items-center gap-2">
           <mat-icon class="text-purple-500">sports_tennis</mat-icon>
           Matchs — semaine en cours
         </h2>
 
-        <div class="flex flex-col gap-3">
+        <div class="flex flex-col gap-1">
 
-          <div class="flex items-center justify-between">
+          <!-- Confirmés -->
+          <div class="flex items-center justify-between py-2 px-2 rounded-lg
+                      cursor-pointer hover:bg-gray-50 transition-colors"
+               matTooltip="Voir les matchs confirmés"
+               (click)="naviguerVersMatchs({ statut: 'CONFIRME' })">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-green-500"></span>
               <span class="text-sm text-gray-600">Confirmés</span>
             </div>
-            <span class="font-medium text-gray-900">
-                  {{ stats()!.matchsConfirmes }}
-                </span>
+            <div class="flex items-center gap-1">
+              <span class="font-medium text-gray-900">{{ stats()!.matchsConfirmes }}</span>
+              <mat-icon class="text-gray-400"
+                        style="font-size:18px;width:18px;height:18px">chevron_right</mat-icon>
+            </div>
           </div>
 
-          <div class="flex items-center justify-between">
+          <!-- En attente -->
+          <div class="flex items-center justify-between py-2 px-2 rounded-lg
+                      cursor-pointer hover:bg-gray-50 transition-colors"
+               matTooltip="Voir les matchs en attente"
+               (click)="naviguerVersMatchs({ statut: 'EN_ATTENTE' })">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-amber-500"></span>
               <span class="text-sm text-gray-600">En attente</span>
             </div>
-            <span class="font-medium text-gray-900">
-                  {{ stats()!.matchsEnAttente }}
-                </span>
+            <div class="flex items-center gap-1">
+              <span class="font-medium text-gray-900">{{ stats()!.matchsEnAttente }}</span>
+              <mat-icon class="text-gray-400"
+                        style="font-size:18px;width:18px;height:18px">chevron_right</mat-icon>
+            </div>
           </div>
 
-          <div class="flex items-center justify-between">
+          <!-- Publics disponibles -->
+          <div class="flex items-center justify-between py-2 px-2 rounded-lg
+                      cursor-pointer hover:bg-gray-50 transition-colors"
+               matTooltip="Voir les matchs publics disponibles"
+               (click)="naviguerVersMatchs({ type: 'PUBLIC', statut: 'EN_ATTENTE' })">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-blue-500"></span>
               <span class="text-sm text-gray-600">Publics disponibles</span>
             </div>
-            <div class="flex items-center gap-2">
-                  <span class="font-medium text-gray-900">
-                    {{ stats()!.matchsPublicsDisponibles }}
-                  </span>
-              <button mat-icon-button
-                      matTooltip="Voir les matchs publics"
-                      (click)="router.navigate(['/matchs'])"
-                      style="width:24px;height:24px;line-height:24px">
-                <mat-icon style="font-size:16px">open_in_new</mat-icon>
-              </button>
+            <div class="flex items-center gap-1">
+              <span class="font-medium text-gray-900">{{ stats()!.matchsPublicsDisponibles }}</span>
+              <mat-icon class="text-gray-400"
+                        style="font-size:18px;width:18px;height:18px">chevron_right</mat-icon>
             </div>
           </div>
 
-          <div class="flex items-center justify-between">
+          <!-- Privés incomplets -->
+          <div class="flex items-center justify-between py-2 px-2 rounded-lg
+                      cursor-pointer hover:bg-gray-50 transition-colors"
+               matTooltip="Voir les matchs privés incomplets"
+               (click)="naviguerVersMatchs({ type: 'PRIVE', statut: 'EN_ATTENTE' })">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-red-400"></span>
               <span class="text-sm text-gray-600">Privés incomplets</span>
             </div>
-            <span class="font-medium"
-                  [class]="stats()!.matchsPrivesIncomplets > 0
-                        ? 'text-red-600' : 'text-gray-900'">
-                  {{ stats()!.matchsPrivesIncomplets }}
-                </span>
+            <div class="flex items-center gap-1">
+              <span class="font-medium"
+                    [class]="stats()!.matchsPrivesIncomplets > 0
+                          ? 'text-red-600' : 'text-gray-900'">
+                {{ stats()!.matchsPrivesIncomplets }}
+              </span>
+              <mat-icon class="text-gray-400"
+                        style="font-size:18px;width:18px;height:18px">chevron_right</mat-icon>
+            </div>
           </div>
 
         </div>
@@ -309,136 +323,136 @@
         </mat-form-field>
       </div>
 
-    <!-- Chargement -->
-    @if (matchsSemaineLoading()) {
-      <div class="flex justify-center py-8">
-        <mat-spinner diameter="32" />
-      </div>
-    }
+      <!-- Chargement -->
+      @if (matchsSemaineLoading()) {
+        <div class="flex justify-center py-8">
+          <mat-spinner diameter="32" />
+        </div>
+      }
 
-    <!-- État vide -->
-    @if (!matchsSemaineLoading() && matchsSemaine().length === 0) {
-      <p class="text-sm text-gray-500 text-center py-6">
-        Aucun match cette semaine
-        {{ siteIdFiltre ? 'sur ce site' : '' }}
-      </p>
-    }
+      <!-- État vide -->
+      @if (!matchsSemaineLoading() && matchsSemaine().length === 0) {
+        <p class="text-sm text-gray-500 text-center py-6">
+          Aucun match cette semaine
+          {{ siteIdFiltre ? 'sur ce site' : '' }}
+        </p>
+      }
 
-    <!-- Tableau des matchs -->
-    @if (!matchsSemaineLoading() && matchsSemaine().length > 0) {
-      <div class="overflow-x-auto -mx-4 sm:mx-0">
-        <table mat-table [dataSource]="matchsSemaine()" class="w-full">
+      <!-- Tableau des matchs -->
+      @if (!matchsSemaineLoading() && matchsSemaine().length > 0) {
+        <div class="overflow-x-auto -mx-4 sm:mx-0">
+          <table mat-table [dataSource]="matchsSemaine()" class="w-full">
 
-          <!-- Date / heure -->
-          <ng-container matColumnDef="dateHeure">
-            <th mat-header-cell *matHeaderCellDef
-                class="text-xs font-medium text-gray-500 uppercase">
-              Date & heure
-            </th>
-            <td mat-cell *matCellDef="let m">
-              <div class="font-medium text-gray-900 text-sm">
-                {{ m.dateHeure | date:'dd/MM/yyyy' }}
-              </div>
-              <div class="text-xs text-gray-500">
-                {{ m.dateHeure | date:'HH:mm' }}
-              </div>
-            </td>
-          </ng-container>
+            <!-- Date / heure -->
+            <ng-container matColumnDef="dateHeure">
+              <th mat-header-cell *matHeaderCellDef
+                  class="text-xs font-medium text-gray-500 uppercase">
+                Date & heure
+              </th>
+              <td mat-cell *matCellDef="let m">
+                <div class="font-medium text-gray-900 text-sm">
+                  {{ m.dateHeure | date:'dd/MM/yyyy' }}
+                </div>
+                <div class="text-xs text-gray-500">
+                  {{ m.dateHeure | date:'HH:mm' }}
+                </div>
+              </td>
+            </ng-container>
 
-          <!-- Site / Terrain -->
-          <ng-container matColumnDef="lieu">
-            <th mat-header-cell *matHeaderCellDef
-                class="text-xs font-medium text-gray-500 uppercase">
-              Lieu
-            </th>
-            <td mat-cell *matCellDef="let m">
-              <div class="font-medium text-gray-900 text-sm">{{ m.siteNom }}</div>
-              <div class="text-xs text-gray-500">{{ m.terrainNom }}</div>
-            </td>
-          </ng-container>
+            <!-- Site / Terrain -->
+            <ng-container matColumnDef="lieu">
+              <th mat-header-cell *matHeaderCellDef
+                  class="text-xs font-medium text-gray-500 uppercase">
+                Lieu
+              </th>
+              <td mat-cell *matCellDef="let m">
+                <div class="font-medium text-gray-900 text-sm">{{ m.siteNom }}</div>
+                <div class="text-xs text-gray-500">{{ m.terrainNom }}</div>
+              </td>
+            </ng-container>
 
-          <!-- Organisateur -->
-          <ng-container matColumnDef="organisateur">
-            <th mat-header-cell *matHeaderCellDef
-                class="text-xs font-medium text-gray-500 uppercase">
-              Organisateur
-            </th>
-            <td mat-cell *matCellDef="let m">
-              <span class="text-sm text-gray-700">{{ m.organisateurNom }}</span>
-            </td>
-          </ng-container>
+            <!-- Organisateur -->
+            <ng-container matColumnDef="organisateur">
+              <th mat-header-cell *matHeaderCellDef
+                  class="text-xs font-medium text-gray-500 uppercase">
+                Organisateur
+              </th>
+              <td mat-cell *matCellDef="let m">
+                <span class="text-sm text-gray-700">{{ m.organisateurNom }}</span>
+              </td>
+            </ng-container>
 
-          <!-- Type -->
-          <ng-container matColumnDef="type">
-            <th mat-header-cell *matHeaderCellDef
-                class="text-xs font-medium text-gray-500 uppercase">
-              Type
-            </th>
-            <td mat-cell *matCellDef="let m">
+            <!-- Type -->
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef
+                  class="text-xs font-medium text-gray-500 uppercase">
+                Type
+              </th>
+              <td mat-cell *matCellDef="let m">
                 <span [class]="typeBadgeClass(m.typeMatch)">
                   {{ m.typeMatch === 'PRIVE' ? 'Privé' : 'Public' }}
                 </span>
-            </td>
-          </ng-container>
+              </td>
+            </ng-container>
 
-          <!-- Joueurs -->
-          <ng-container matColumnDef="joueurs">
-            <th mat-header-cell *matHeaderCellDef
-                class="text-xs font-medium text-gray-500 uppercase">
-              Joueurs
-            </th>
-            <td mat-cell *matCellDef="let m">
-              <div class="flex items-center gap-1">
-                @for (i of [1,2,3,4]; track i) {
-                  <span [class]="joueurIconClass(m, i)">
+            <!-- Joueurs -->
+            <ng-container matColumnDef="joueurs">
+              <th mat-header-cell *matHeaderCellDef
+                  class="text-xs font-medium text-gray-500 uppercase">
+                Joueurs
+              </th>
+              <td mat-cell *matCellDef="let m">
+                <div class="flex items-center gap-1">
+                  @for (i of [1,2,3,4]; track i) {
+                    <span [class]="joueurIconClass(m, i)">
                       <mat-icon style="font-size:14px;width:14px;height:14px">
                         person
                       </mat-icon>
                     </span>
-                }
-                <span class="text-xs text-gray-500 ml-1">
+                  }
+                  <span class="text-xs text-gray-500 ml-1">
                     {{ m.nombreJoueursConfirmes }}/4
                   </span>
-              </div>
-            </td>
-          </ng-container>
+                </div>
+              </td>
+            </ng-container>
 
-          <!-- Statut -->
-          <ng-container matColumnDef="statut">
-            <th mat-header-cell *matHeaderCellDef
-                class="text-xs font-medium text-gray-500 uppercase">
-              Statut
-            </th>
-            <td mat-cell *matCellDef="let m">
+            <!-- Statut -->
+            <ng-container matColumnDef="statut">
+              <th mat-header-cell *matHeaderCellDef
+                  class="text-xs font-medium text-gray-500 uppercase">
+                Statut
+              </th>
+              <td mat-cell *matCellDef="let m">
                 <span [class]="statutBadgeClass(m.statut)">
                   {{ statutLabel(m.statut) }}
                 </span>
-            </td>
-          </ng-container>
+              </td>
+            </ng-container>
 
-          <!-- Actions -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let m">
-              <button mat-icon-button
-                      matTooltip="Voir le détail"
-                      (click)="router.navigate(['/matchs', m.id])">
-                <mat-icon class="text-gray-500">visibility</mat-icon>
-              </button>
-            </td>
-          </ng-container>
+            <!-- Actions -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let m">
+                <button mat-icon-button
+                        matTooltip="Voir le détail"
+                        (click)="router.navigate(['/matchs', m.id])">
+                  <mat-icon class="text-gray-500">visibility</mat-icon>
+                </button>
+              </td>
+            </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="colonnesMatchs"
-              class="bg-gray-50 border-b border-gray-200"></tr>
-          <tr mat-row *matRowDef="let row; columns: colonnesMatchs;"
-              class="hover:bg-gray-50 border-b border-gray-100 last:border-0
+            <tr mat-header-row *matHeaderRowDef="colonnesMatchs"
+                class="bg-gray-50 border-b border-gray-200"></tr>
+            <tr mat-row *matRowDef="let row; columns: colonnesMatchs;"
+                class="hover:bg-gray-50 border-b border-gray-100 last:border-0
                        cursor-pointer"
-              (click)="router.navigate(['/matchs', row.id])">
-          </tr>
-        </table>
-      </div>
-    }
-  </div>
+                (click)="router.navigate(['/matchs', row.id])">
+            </tr>
+          </table>
+        </div>
+      }
+    </div>
 
     <!-- Actions rapides -->
     <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
